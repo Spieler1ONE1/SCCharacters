@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                               QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox, QComboBox)
+                               QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox, QComboBox, QFrame, QWidget)
 from PySide6.QtCore import Qt
 from src.core.config_manager import ConfigManager
 from src.utils.translations import translator
@@ -94,7 +94,6 @@ class SettingsDialog(QDialog):
         btn_browse_ptu.clicked.connect(self.browse_ptu_path)
         ptu_input_layout.addWidget(btn_browse_ptu)
         
-        ptu_layout.addLayout(ptu_input_layout)
         ptu_layout.addLayout(ptu_input_layout)
         layout.addLayout(ptu_layout)
         
