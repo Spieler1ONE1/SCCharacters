@@ -110,6 +110,20 @@ Special thanks to these incredible resources that made this project possible:
 
 ---
 
+---
+
+## ⚖️ Legal Disclaimer
+
 <div align="center">
-  <sub>This is an unofficial fan-made tool and is not affiliated with Cloud Imperium Games. Star Citizen® is a registered trademark of Cloud Imperium Games Corporation.</sub>
+  <img src="assets/made_by_community.png" alt="Made by the Community" width="150">
+  <br><br>
 </div>
+
+This project is an **unofficial fan-made tool** and is not affiliated with, endorsed by, or sponsored by Cloud Imperium Games (CIG) or Roberts Space Industries (RSI).
+
+All content related to Star Citizen is property of Cloud Imperium Rights LLC.
+**Star Citizen®**, **Roberts Space Industries®**, and **Cloud Imperium®** are registered trademarks of Cloud Imperium Rights LLC.
+
+This project adheres to the [Star Citizen Fandom FAQ](https://support.robertsspaceindustries.com/hc/en-us/articles/360006895793-Star-Citizen-Fankit-and-Fandom-FAQ).
+
+> *This is an unofficial Star Citizen fan project, not affiliated with the Cloud Imperium group of companies. All content on this site not authored by its host or users are property of their respective owners.*
