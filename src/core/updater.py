@@ -11,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 class UpdateManager:
     # URL del archivo JSON con la información de la última versión
-    # CAMBIAR ESTO por tu URL real (ej. GitHub Raw)
-    MANIFEST_URL = "https://raw.githubusercontent.com/TuUsuario/TuRepo/main/version.json"
+    MANIFEST_URL = "https://raw.githubusercontent.com/Spieler1ONE1/SCCharacters/main/version.json"
     
     def __init__(self):
         self.current_version = APP_VERSION
