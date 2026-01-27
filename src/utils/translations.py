@@ -177,7 +177,13 @@ TRANSLATIONS = {
         "roulette_install": "INSTALAR ESTE",
         "roulette_spin": "GIRAR DE NUEVO",
         "downloading_db_pages": "Descargando base de datos (Páginas {start}-{end})...",
-        "launch_game_btn": "🚀 INICIAR JUEGO"
+        "launch_game_btn": "🚀 INICIAR JUEGO",
+        "credits_discord": "DISCORD: Únete a la comunidad",
+        "legal_fan_project": "PROYECTO DE FAN NO OFICIAL",
+        "legal_not_affiliated": "No afiliado con Cloud Imperium Games o Roberts Space Industries.",
+        "legal_official_site": "Sitio Oficial",
+        "legal_fandom_faq": "FAQ de Fandom",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® y Cloud Imperium® son marcas comerciales de Cloud Imperium Rights LLC."
     },
     "en": {
         "window_title": "BioMetrics Automatic System & Manager",
@@ -355,7 +361,13 @@ TRANSLATIONS = {
         "roulette_install": "INSTALL THIS ONE",
         "roulette_spin": "SPIN AGAIN",
         "downloading_db_pages": "Downloading database (Pages {start}-{end})...",
-        "launch_game_btn": "🚀 LAUNCH GAME"
+        "launch_game_btn": "🚀 LAUNCH GAME",
+        "credits_discord": "DISCORD: Join Community",
+        "legal_fan_project": "UNOFFICIAL FAN PROJECT",
+        "legal_not_affiliated": "Not affiliated with Cloud Imperium Games or Roberts Space Industries.",
+        "legal_official_site": "Official Site",
+        "legal_fandom_faq": "Fandom FAQ",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® and Cloud Imperium® are trademarks of Cloud Imperium Rights LLC."
     },
     "fr": {
         "window_title": "Système Automatique et Gestionnaire BioMetrics",
@@ -520,7 +532,13 @@ TRANSLATIONS = {
         "roulette_install": "INSTALLER CELUI-CI",
         "roulette_spin": "RELANCER",
         "downloading_db_pages": "Téléchargement de la base de données (Pages {start}-{end})...",
-        "launch_game_btn": "🚀 LANCER JEU"
+        "launch_game_btn": "🚀 LANCER JEU",
+        "credits_discord": "DISCORD : Rejoindre la communauté",
+        "legal_fan_project": "PROJET DE FAN NON OFFICIEL",
+        "legal_not_affiliated": "Non affilié à Cloud Imperium Games ou Roberts Space Industries.",
+        "legal_official_site": "Site Officiel",
+        "legal_fandom_faq": "FAQ Fandom",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® et Cloud Imperium® sont des marques déposées de Cloud Imperium Rights LLC."
     },
     "de": {
         "window_title": "BioMetrics Automatisches System & Manager",
@@ -684,7 +702,13 @@ TRANSLATIONS = {
         "roulette_title": "🎲 ZUFÄLLIGE AUSWAHL",
         "roulette_install": "DIESEN INSTALLIEREN",
         "downloading_db_pages": "Datenbank herunterladen (Seiten {start}-{end})...",
-        "launch_game_btn": "🚀 SPIEL STARTEN"
+        "launch_game_btn": "🚀 SPIEL STARTEN",
+        "credits_discord": "DISCORD: Community beitreten",
+        "legal_fan_project": "INOFFIZIELLES FAN-PROJEKT",
+        "legal_not_affiliated": "Nicht verbunden mit Cloud Imperium Games oder Roberts Space Industries.",
+        "legal_official_site": "Offizielle Seite",
+        "legal_fandom_faq": "Fandom FAQ",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® und Cloud Imperium® sind Marken von Cloud Imperium Rights LLC."
     },
     "pt": {
         "window_title": "Sistema Automático e Gestor BioMetrics",
@@ -848,7 +872,13 @@ TRANSLATIONS = {
         "roulette_title": "🎲 SELEÇÃO ALEATÓRIA",
         "roulette_install": "INSTALAR ESTE",
         "downloading_db_pages": "Baixando banco de dados (Páginas {start}-{end})...",
-        "launch_game_btn": "🚀 INICIAR JOGO"
+        "launch_game_btn": "🚀 INICIAR JOGO",
+        "credits_discord": "DISCORD: Entrar na Comunidade",
+        "legal_fan_project": "PROJETO DE FÃ NÃO OFICIAL",
+        "legal_not_affiliated": "Não afiliado à Cloud Imperium Games ou Roberts Space Industries.",
+        "legal_official_site": "Site Oficial",
+        "legal_fandom_faq": "FAQ de Fandom",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® e Cloud Imperium® são marcas comerciais da Cloud Imperium Rights LLC."
     },
     "it": {
         "window_title": "Sistema Automatico e Gestore BioMetrics",
@@ -1006,7 +1036,14 @@ TRANSLATIONS = {
         "show_logs": "Mostra Registri",
         "roulette_title": "🎲 SELEZIONE CASUALE",
         "roulette_install": "INSTALLA QUESTO",
-        "downloading_db_pages": "Download del database (Pagine {start}-{end})..."
+        "downloading_db_pages": "Download del database (Pagine {start}-{end})...",
+        "launch_game_btn": "🚀 AVVIA GIOCO",
+        "credits_discord": "DISCORD: Unisciti alla Community",
+        "legal_fan_project": "PROGETTO FAN NON UFFICIALE",
+        "legal_not_affiliated": "Non affiliato con Cloud Imperium Games o Roberts Space Industries.",
+        "legal_official_site": "Sito Ufficiale",
+        "legal_fandom_faq": "FAQ Fandom",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® e Cloud Imperium® sono marchi di Cloud Imperium Rights LLC."
     },
     "ru": {
         "window_title": "Автоматическая система и менеджер BioMetrics",
@@ -1141,7 +1178,13 @@ TRANSLATIONS = {
         "show_logs": "Показать журналы",
         "roulette_title": "🎲 СЛУЧАЙНЫЙ ВЫБОР",
         "roulette_install": "УСТАНОВИТЬ ЭТОГО",
-        "downloading_db_pages": "Загрузка базы данных (Страницы {start}-{end})..."
+        "downloading_db_pages": "Загрузка базы данных (Страницы {start}-{end})...",
+        "credits_discord": "DISCORD: Вступить в сообщество",
+        "legal_fan_project": "НЕОФИЦИАЛЬНЫЙ ФАН-ПРОЕКТ",
+        "legal_not_affiliated": "Не связан с Cloud Imperium Games или Roberts Space Industries.",
+        "legal_official_site": "Официальный сайт",
+        "legal_fandom_faq": "Fandom FAQ",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® и Cloud Imperium® являются торговыми марками Cloud Imperium Rights LLC."
     },
     "zh": {
         "window_title": "BioMetrics 自动化系统与管理器",
@@ -1277,7 +1320,13 @@ TRANSLATIONS = {
         "show_logs": "显示日志",
         "roulette_title": "🎲 随机选择",
         "roulette_install": "安装此角色",
-        "downloading_db_pages": "正在下载数据库 (第 {start}-{end} 页)..."
+        "downloading_db_pages": "正在下载数据库 (第 {start}-{end} 页)...",
+        "credits_discord": "DISCORD: 加入社区",
+        "legal_fan_project": "非官方粉丝项目",
+        "legal_not_affiliated": "与 Cloud Imperium Games 或 Roberts Space Industries 无关。",
+        "legal_official_site": "官方网站",
+        "legal_fandom_faq": "粉丝问答",
+        "legal_trademarks": "Star Citizen®, Roberts Space Industries® 和 Cloud Imperium® 是 Cloud Imperium Rights LLC 的商标。"
     },
     "ja": {
         "window_title": "BioMetrics 自動システム＆マネージャー",
@@ -1405,7 +1454,13 @@ TRANSLATIONS = {
         "show_logs": "ログを表示",
         "roulette_title": "🎲 ランダム選択",
         "roulette_install": "これをインストール",
-        "downloading_db_pages": "データベースをダウンロード中 (ページ {start}-{end})..."
+        "downloading_db_pages": "データベースをダウンロード中 (ページ {start}-{end})...",
+        "credits_discord": "DISCORD: コミュニティに参加",
+        "legal_fan_project": "非公式ファンプロジェクト",
+        "legal_not_affiliated": "Cloud Imperium Games または Roberts Space Industries とは提携していません。",
+        "legal_official_site": "公式サイト",
+        "legal_fandom_faq": "ファンダムFAQ",
+        "legal_trademarks": "Star Citizen®、Roberts Space Industries®、および Cloud Imperium® は Cloud Imperium Rights LLC の商標です。"
     },
      "ar": {
         "window_title": "نظام ومدير BioMetrics التلقائي",
@@ -1533,7 +1588,13 @@ TRANSLATIONS = {
         "show_logs": "عرض السجلات",
         "roulette_title": "🎲 اختيار عشوائي",
         "roulette_install": "تثبيت هذا",
-        "downloading_db_pages": "جارٍ تنزيل قاعدة البيانات (الصفحات {start}-{end})..."
+        "downloading_db_pages": "جارٍ تنزيل قاعدة البيانات (الصفحات {start}-{end})...",
+        "credits_discord": "DISCORD: الانضمام إلى المجتمع",
+        "legal_fan_project": "مشروع معجبين غير رسمي",
+        "legal_not_affiliated": "غير تابع لـ Cloud Imperium Games أو Roberts Space Industries.",
+        "legal_official_site": "الموقع الرسمي",
+        "legal_fandom_faq": "أسئلة المعجبين الشائعة",
+        "legal_trademarks": "Star Citizen® و Roberts Space Industries® و Cloud Imperium® هي علامات تجارية لشركة Cloud Imperium Rights LLC."
     },
 }
 

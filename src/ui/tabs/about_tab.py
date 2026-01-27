@@ -83,12 +83,9 @@ class AboutTab(QWidget):
         
         self.name_label = QLabel("SPIELERWAN")
         self.name_label.setAlignment(Qt.AlignLeft)
-
-
         
         header_layout.addWidget(self.title_label)
         header_layout.addWidget(self.name_label)
-
         
         layout.addWidget(self.header_container)
         
@@ -129,11 +126,13 @@ class AboutTab(QWidget):
         btn_yt2 = TechButton("YOUTUBE: SCpi9", "https://www.youtube.com/@SCpi9", "#ef4444")
         btn_twitch = TechButton("TWITCH: Live Feed", "https://www.twitch.tv/spielerwan", "#a855f7")
         btn_twitter = TechButton(self.tr("credits_comms"), "https://x.com/SpielerWAN", "#3b82f6")
+        btn_discord = TechButton(self.tr("credits_discord"), "https://discord.gg/TGjCmzHR", "#5865F2")
         
         grid_socials.addWidget(btn_yt1, 0, 0)
         grid_socials.addWidget(btn_yt2, 0, 1)
         grid_socials.addWidget(btn_twitch, 1, 0)
         grid_socials.addWidget(btn_twitter, 1, 1)
+        grid_socials.addWidget(btn_discord, 2, 0, 1, 2)
         
         network_layout.addLayout(grid_socials)
         
@@ -172,22 +171,61 @@ class AboutTab(QWidget):
         
         layout.addWidget(self.referral_frame)
         
-        # --- 4. Community Badge & Footer ---
+        # --- 4. Legal & Community Footer ---
         layout.addStretch()
         
+        footer_container = QWidget()
+        footer_layout = QVBoxLayout(footer_container)
+        footer_layout.setContentsMargins(0, 20, 0, 0)
+        footer_layout.setSpacing(10)
+        footer_layout.setAlignment(Qt.AlignCenter)
+        
+        # Community Badge (Ajustado para no recortarse)
         self.badge_label = QLabel()
         self.badge_label.setAlignment(Qt.AlignCenter)
+        # Importante: Permitir que el label se adapte si es necesario, pero fijar minimo
+        self.badge_label.setMinimumSize(120, 120) 
         
         from src.utils.paths import get_resource_path
-        image_path = get_resource_path("src/assets/community_badge.png")
+        image_path = get_resource_path("src/assets/made_by_community.png")
         if os.path.exists(image_path):
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
-                pixmap = pixmap.scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                # Scaled contents False para mejor control manual, usamos scaled() del pixmap
+                # Usamos 120x120 para que sea visible pero no enorme
+                pixmap = pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self.badge_label.setPixmap(pixmap)
-                self.badge_label.setGraphicsEffect(QGraphicsOpacityEffect(self))
-                self.badge_label.graphicsEffect().setOpacity(0.5) # Subtle
-                layout.addWidget(self.badge_label)
+                footer_layout.addWidget(self.badge_label)
+        
+        # Add spacing to prevent overlap
+        footer_layout.addSpacing(15)
+        
+        # Legal Disclaimer (Compacto)
+        self.legal_label = QLabel()
+        self.legal_label.setAlignment(Qt.AlignCenter)
+        self.legal_label.setWordWrap(True)
+        self.legal_label.setOpenExternalLinks(True)
+        self.legal_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        
+        legal_text = f"""
+            <div style='color: #64748b; font-size: 10px; font-family: Segoe UI; line-height: 120%;'>
+                <p>
+                    <b>{self.tr('legal_fan_project')}</b><br>
+                    <span style='color: #475569;'>{self.tr('legal_not_affiliated')}</span>
+                </p>
+                <p>
+                    <a href='https://robertsspaceindustries.com/' style='color: #3b82f6; text-decoration: none;'>{self.tr('legal_official_site')}</a> | 
+                    <a href='https://support.robertsspaceindustries.com/hc/en-us/articles/360006895793-Star-Citizen-Fankit-and-Fandom-FAQ' style='color: #3b82f6; text-decoration: none;'>{self.tr('legal_fandom_faq')}</a>
+                </p>
+                <p style='color: #334155; font-size: 9px;'>
+                     {self.tr('legal_trademarks')}
+                </p>
+            </div>
+        """
+        self.legal_label.setText(legal_text)
+        footer_layout.addWidget(self.legal_label)
+        
+        layout.addWidget(footer_container)
 
     def showEvent(self, event):
         super().showEvent(event)
