@@ -980,14 +980,6 @@ class MainWindow(FramelessWindow):
         deploy_ptu_action.triggered.connect(self.deploy_to_ptu)
         
         tools_menu.addSeparator()
-        
-        maintenance_action = tools_menu.addAction("Maintenance Tools")
-        maintenance_action.triggered.connect(self.open_maintenance)
-        
-        tools_menu.addSeparator()
-        
-        stats_action = tools_menu.addAction("📊 Statistics")
-        stats_action.triggered.connect(self.show_statistics)
 
 
 
@@ -1254,23 +1246,7 @@ class MainWindow(FramelessWindow):
         dlg = LogViewerDialog(self)
         dlg.exec()
 
-    def open_maintenance(self):
-        from src.ui.maintenance_dialog import MaintenanceDialog
-        dlg = MaintenanceDialog(self.character_service, self.image_loader, self)
-        dlg.exec()
 
-    def show_statistics(self):
-        from src.ui.statistics_dialog import StatisticsDialog
-        # Pass installed and online lists
-        # installed_tab has loaded chars logic
-        installed = self.installed_tab.character_widgets
-        # Extract char objects
-        installed_chars = [w.character for w in installed]
-        
-        online = self.online_tab.all_characters
-        
-        dlg = StatisticsDialog(installed_chars, online, self)
-        dlg.exec()
 
     def on_bulk_add_collection(self, characters, collection_name):
         count = 0

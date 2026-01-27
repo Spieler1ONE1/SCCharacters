@@ -1,6 +1,6 @@
 {
-    "latest_version": "1.0.2",
+    "latest_version": "1.0.3",
     "download_url": "https://github.com/Spieler1ONE1/SCCharacters/releases/latest/download/SCCharacters.exe",
-    "changelog": "Arregladas las herramientas de Mantenimiento y Estadísticas. Corregidos errores visuales en las barras de progreso.",
+    "changelog": "Simplificación del programa: se eliminan las herramientas de mantenimiento y estadísticas para una interfaz más limpia.",
     "sha256": ""
 }
