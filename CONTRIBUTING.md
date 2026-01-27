@@ -10,6 +10,10 @@ This project and everyone participating in it is governed by the [Code of Conduc
 
 ## How Can I Contribute?
 
+### ❓ Got a Question?
+
+If you have questions about the codebase or how to get started, feel free to ask in our [Discord Server](https://discord.gg/TGjCmzHR).
+
 ### Reporting Bugs
 
 This section guides you through submitting a bug report for SCCharacters. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.

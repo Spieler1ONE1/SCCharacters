@@ -1,7 +1,7 @@
 # 🧬 BioMetrics System & Manager
 > *Advanced Character Identity Management for Star Citizen*
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/TGjCmzHR)
 
 **SCCharacters (BioMetrics)** is a powerful, immersive desktop application designed to streamline the management, installation, and customization of your Star Citizen character appearances (`.chf` files). Built with a modern, sci-fi aesthetic that mirrors the in-game universe, this tool serves as your personal extensive biometric database.
 
@@ -64,6 +64,16 @@
    - Go to the **Online Tab** to browse and download.
    - Or drop your `.chf` files into the **Installed Tab**.
 3. **Apply to Game**: Once installed, the characters appear in your Star Citizen character customization menu under "Import Character".
+
+---
+
+## 💬 Community
+
+Join our growing community on Discord to share your characters, ask for help, or discuss features:
+
+<a href="https://discord.gg/TGjCmzHR">
+  <img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord"/>
+</a>
 
 ---
 
