@@ -112,7 +112,7 @@ Special thanks to these incredible resources that made this project possible:
 
 ---
 
-## ⚖️ Legal Disclaimer
+## ⚖️ Legal Disclaimer | [Roberts Space Industries](https://robertsspaceindustries.com/)
 
 <div align="center">
   <img src="assets/made_by_community.png" alt="Made by the Community" width="150">
