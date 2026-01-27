@@ -106,7 +106,7 @@ Special thanks to these incredible resources that made this project possible:
 ## 📜 Credits
 
 **Creator**: [SpielerWAN](https://www.youtube.com/@SpielerWAN)
-*Star Citizen Content Creator & Developer*
+*Star Citizen Content Creator*
 
 ---
 
