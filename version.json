@@ -1,6 +1,6 @@
 {
-    "latest_version": "1.0.3",
+    "latest_version": "1.0.4",
     "download_url": "https://github.com/Spieler1ONE1/SCCharacters/releases/latest/download/SCCharacters.exe",
-    "changelog": "Simplificación del programa: se eliminan las herramientas de mantenimiento y estadísticas para una interfaz más limpia.",
+    "changelog": "Arreglado el visor de registros (Logs). Se corrigió la ruta de importación que causaba el fallo silencioso.",
     "sha256": ""
 }

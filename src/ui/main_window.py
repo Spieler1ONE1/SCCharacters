@@ -1242,7 +1242,7 @@ class MainWindow(FramelessWindow):
                     widget.set_favorite(is_fav)
 
     def show_logs(self):
-        from src.ui.log_viewer import LogViewerDialog
+        from src.ui.widgets import LogViewerDialog
         dlg = LogViewerDialog(self)
         dlg.exec()
 
