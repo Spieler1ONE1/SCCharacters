@@ -49,10 +49,17 @@
 - Star Citizen installed (LIVE/PTU)
 
 ### Installation
-1. **Download**: Go to the [Releases](https://github.com/Spieler1ONE1/SCCharacters/releases) page.
-2. **Get the App**: Download the latest `BioMetrics_Installer.exe` (or `.zip`).
-3. **Run**: Double-click the executable to launch the tool.
+
+<div align="center">
+  <a href="https://github.com/Spieler1ONE1/SCCharacters/releases/download/v1.0.0/SCCharacters.exe">
+    <img src="https://img.shields.io/badge/Download-SCCharacters_v1.0.0-2ea44f?style=for-the-badge&logo=windows&logoColor=white" alt="Download Now"/>
+  </a>
+</div>
+
+1. **Download**: Click the button above to download `SCCharacters.exe` directly.
+2. **Run**: Double-click the executable to launch the tool.
    - *Note: You may need to bypass Windows SmartScreen as this is a new unsigned application.*
+   - *No installation required - it's a portable app.*
 
 
 ---
