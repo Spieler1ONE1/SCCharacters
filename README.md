@@ -78,6 +78,14 @@ Contributions are welcome! If you have ideas for new features or language improv
 
 ---
 
+## 🌟 Acknowledgements
+
+Special thanks to these incredible resources that made this project possible:
+- **[Star Citizen Characters](https://www.star-citizen-characters.com/)**: The primary source for collecting diverse character profiles.
+- **[StarChar.app](https://starchar.app/)**: An essential tool used for detailed character customization and creation.
+
+---
+
 ## 📜 Credits
 
 **Creator**: [SpielerWAN](https://www.youtube.com/@SpielerWAN)
