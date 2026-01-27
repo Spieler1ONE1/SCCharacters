@@ -36,25 +36,14 @@
 
 ### Prerequisites
 - Windows 10/11
-- [Python 3.11+](https://www.python.org/downloads/)
 - Star Citizen installed (LIVE/PTU)
 
-### Setup
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Spieler1ONE1/SCCharacters.git
-   cd SCCharacters
-   ```
+### Installation
+1. **Download**: Go to the [Releases](https://github.com/Spieler1ONE1/SCCharacters/releases) page.
+2. **Get the App**: Download the latest `BioMetrics_Installer.exe` (or `.zip`).
+3. **Run**: Double-click the executable to launch the tool.
+   - *Note: You may need to bypass Windows SmartScreen as this is a new unsigned application.*
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Run the application:**
-   ```bash
-   python src/main.py
-   ```
 
 ---
 
