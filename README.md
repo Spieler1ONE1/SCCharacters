@@ -1,2 +1,91 @@
-# SCCharacters
-A tool that streamlines the installation and management of custom characters for your game. It automates the setup process, reduces manual file handling, and helps users add or update character packs quickly and safely.
+# 🧬 BioMetrics System & Manager
+> *Advanced Character Identity Management for Star Citizen*
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange)
+
+**SCCharacters (BioMetrics)** is a powerful, immersive desktop application designed to streamline the management, installation, and customization of your Star Citizen character appearances (`.chf` files). Built with a modern, sci-fi aesthetic that mirrors the in-game universe, this tool serves as your personal extensive biometric database.
+
+---
+
+## 🚀 Key Features
+
+### 📂 Seamless Management
+- **One-Click Installation**: Install characters directly from *StarChar.app* or custom URLs.
+- **Drag & Drop**: Simply drag `.chf` files into the app to import them instantly.
+- **Local Library**: View and manage all your installed character profiles in a visual grid by name or date.
+
+### 🛠️ Advanced Tools
+- **BioMetrics Editor (Experimental)**: Tweak character parameters strictly from the app.
+- **Backup & Restore**: Create `.zip` backups of your entire character library to keep your identities safe.
+- **Multi-Environment Deploy**: Easily deploy your characters to LIVE, PTU, and EPTU environments simultaneously.
+- **Deduplication**: Intelligent handling of duplicate files to keep your folder clean.
+
+### 🌐 Global Connectivity
+- **Online Repository**: Browse and download new looks from the community directly within the app.
+- **Multi-Language Support**: Fully localized in 10 languages:
+  - 🇪🇸 Español | 🇺🇸 English | 🇫🇷 Français | 🇩🇪 Deutsch | 🇧🇷 Portugués | 🇮🇹 Italiano | 🇷🇺 Русский | 🇨🇳 中文 | 🇯🇵 日本語 | 🇸🇦 العربية
+
+### 🎨 Immersive Experience
+- **Sci-Fi UI**: A "Diegetic" interface designed to feel like a tool from 2954.
+- **Smart Detection**: Automatically finds your Star Citizen installation path.
+- **Audio Feedback**: Custom sound effects for a premium user experience.
+
+---
+
+## 📥 Installation
+
+### Prerequisites
+- Windows 10/11
+- [Python 3.11+](https://www.python.org/downloads/)
+- Star Citizen installed (LIVE/PTU)
+
+### Setup
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Spieler1ONE1/SCCharacters.git
+   cd SCCharacters
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run the application:**
+   ```bash
+   python src/main.py
+   ```
+
+---
+
+## 🖥️ Usage
+
+1. **Launch BioMetrics**: Open the application. On first run, it will attempt to auto-detect your Star Citizen `CustomCharacters` folder.
+2. **Import Characters**:
+   - Go to the **Online Tab** to browse and download.
+   - Or drop your `.chf` files into the **Installed Tab**.
+3. **Apply to Game**: Once installed, the characters appear in your Star Citizen character customization menu under "Import Character".
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! If you have ideas for new features or language improvements:
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 📜 Credits
+
+**Creator**: [SpielerWAN](https://www.youtube.com/@SpielerWAN)
+*Star Citizen Content Creator & Developer*
+
+---
+
+<div align="center">
+  <sub>This is an unofficial fan-made tool and is not affiliated with Cloud Imperium Games. Star Citizen® is a registered trademark of Cloud Imperium Games Corporation.</sub>
+</div>
