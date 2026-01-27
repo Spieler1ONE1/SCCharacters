@@ -7,6 +7,16 @@
 
 ---
 
+## 🖼️ Interface Gallery
+
+<div align="center">
+  <img src="assets/screenshots/dashboard.png" alt="Dashboard" width="800">
+  <br><br>
+  <img src="assets/screenshots/splash_screen.png" alt="Splash Screen" width="400">
+</div>
+
+---
+
 ## 🚀 Key Features
 
 ### 📂 Seamless Management
