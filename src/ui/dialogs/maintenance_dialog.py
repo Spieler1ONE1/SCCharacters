@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
-                               QLabel, QProgressBar, QTextEdit, QMessageBox, QFrame, QScrollArea)
+                               QLabel, QProgressBar, QTextEdit, QMessageBox, QFrame, QScrollArea, QWidget)
 from PySide6.QtCore import Qt, QTimer, QThread, Signal
 import hashlib
 import os
+import json
 from src.core.character_service import CharacterService
 from src.utils.image_loader import ImageLoader
 from src.utils.translations import translator

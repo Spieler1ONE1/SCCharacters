@@ -61,37 +61,30 @@ class StatisticsDialog(QDialog):
         for tag, count in sorted_tags:
             row = QHBoxLayout()
             lbl = QLabel(f"{tag}")
-            lbl.setFixedWidth(100)
-            
-            # Bar
-            pct = int((count / max_val) * 100)
-            bar = QFrame()
-            bar.setFixedHeight(12)
-            bar.setStyleSheet(f"""
-                background-color: #334155; 
-                border-radius: 6px;
-                background-image: linear-gradient(to right, #6366f1 {pct}%, transparent {pct}%);
-            """) # CSS Gradient linear doesn't work well in Qt stylesheets like this for values on the fly without complex string manip
+            lbl.setFixedWidth(120)
             
             # Simple progress bar widget
             from PySide6.QtWidgets import QProgressBar
+            pct = int((count / max_val) * 100)
             pbar = QProgressBar()
             pbar.setValue(pct)
             pbar.setTextVisible(False)
             pbar.setFixedHeight(8)
-            pbar.setStyleSheet(f"""
-                QProgressBar {{
+            pbar.setStyleSheet("""
+                QProgressBar {
                     border: none;
-                    background-color: #334155;
+                    background-color: rgba(255, 255, 255, 0.1);
                     border-radius: 4px;
-                }}
-                QProgressBar::chunk {{
+                }
+                QProgressBar::chunk {
                     background-color: #6366f1;
                     border-radius: 4px;
-                }}
+                }
             """)
             
             count_lbl = QLabel(str(count))
+            count_lbl.setFixedWidth(30)
+            count_lbl.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
             
             row.addWidget(lbl)
             row.addWidget(pbar)

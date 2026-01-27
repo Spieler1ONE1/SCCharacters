@@ -1,6 +1,6 @@
 {
-    "latest_version": "1.0.1",
+    "latest_version": "1.0.2",
     "download_url": "https://github.com/Spieler1ONE1/SCCharacters/releases/latest/download/SCCharacters.exe",
-    "changelog": "Corrección de error crítico al abrir la configuración (missing imports). Mejoras visuales en el diálogo de settings.",
+    "changelog": "Arregladas las herramientas de Mantenimiento y Estadísticas. Corregidos errores visuales en las barras de progreso.",
     "sha256": ""
 }
