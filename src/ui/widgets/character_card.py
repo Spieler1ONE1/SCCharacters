@@ -91,7 +91,7 @@ class TiltLabel(QLabel):
         if self._scan_pos >= 0.0 and self._scan_pos <= 1.5:
              scan_y = h * self._scan_pos
              # No hard line, just a soft white glow
-             from PySide6.QtGui import QLinearGradient
+
              grad_trail = QLinearGradient(0, scan_y, 0, scan_y - 60)
              grad_trail.setColorAt(0.0, QColor(255, 255, 255, 30))
              grad_trail.setColorAt(1.0, QColor(255, 255, 255, 0))
@@ -147,32 +147,58 @@ class TiltLabel(QLabel):
                      painter.drawLine(0, i, w, i)
         
         # --- Holo / Glare Effect ---
+        # --- Holo / Glare Effect ---
         if self._tilt.manhattanLength() > 0:
-            from PySide6.QtGui import QLinearGradient
-            # Calculate gradient direction based on tilt
-            shift_x = self._tilt.y() * 10 
-            shift_y = self._tilt.x() * 10
+
             
-            gradient = QLinearGradient(0, 0, w, h)
-            # A soft gleam
-            c_transparent = QColor(255, 255, 255, 0)
+            # 1. Tech Grid Overlay (Parallax)
+            # Moves slightly opposite to tilt to create depth
+            grid_off_x = self._tilt.y() * 2.0
+            grid_off_y = self._tilt.x() * 2.0
             
-            # HOLO GRID EFFECT
-            # If tilting, draw faint scanlines
-            painter.setPen(QPen(QColor(255, 255, 255, 10), 1))
-            for i in range(0, h, 8):
-                painter.drawLine(0, i, w, i)
+            painter.setPen(QPen(QColor(255, 255, 255, 15), 1))
             
-            # Use custom gleam color or default white
-            gleam = getattr(self, '_gleam_color', QColor(255, 255, 255, 40))
+            # Vertical lines
+            grid_step = 20
+            start_x = int(grid_off_x) % grid_step
+            for i in range(start_x, w, grid_step):
+                 painter.drawLine(i, 0, i, h)
+                 
+            # Horizontal lines
+            start_y = int(grid_off_y) % grid_step
+            for i in range(start_y, h, grid_step):
+                 painter.drawLine(0, i, w, i)
+
+            # 2. Holographic Foil Sheen
+            # A rainbow-like gradient that shifts across the card
             
-            # Position the gleam based on tilt
-            pos = 0.5 + (self._tilt.y() / 40.0) + (self._tilt.x() / 40.0)
-            pos = max(0.0, min(1.0, pos))
+            # Calculate angle based on tilt for dynamic direction
+            angle = (self._tilt.x() + self._tilt.y()) * 5.0
             
-            gradient.setColorAt(max(0.0, pos - 0.2), c_transparent)
-            gradient.setColorAt(pos, gleam)
-            gradient.setColorAt(min(1.0, pos + 0.2), c_transparent)
+            # Create a multi-stop gradient for "iridescence"
+            # We stretch it essentially across the view
+            
+            # Position the center of the sheen based on tilt
+            # Map tilt (-5 to 5) to (0 to 1) roughly
+            pos_x = 0.5 + (self._tilt.y() / 15.0)
+            pos_y = 0.5 + (self._tilt.x() / 15.0)
+            
+            grad_start = QPointF(w * (pos_x - 0.5), h * (pos_y - 0.5))
+            grad_end   = QPointF(w * (pos_x + 0.5), h * (pos_y + 0.5))
+            
+            gradient = QLinearGradient(grad_start, grad_end)
+            
+            # Rainbow/Oil slick colors (Sci-fi version: Cyan/Pink/White)
+            c_trans = QColor(255, 255, 255, 0)
+            c_cyan  = QColor(0, 240, 255, 50)
+            c_pink  = QColor(255, 0, 255, 30)
+            c_white = QColor(255, 255, 255, 70)
+            
+            gradient.setColorAt(0.0, c_trans)
+            gradient.setColorAt(0.4, c_cyan)
+            gradient.setColorAt(0.5, c_white)
+            gradient.setColorAt(0.6, c_pink)
+            gradient.setColorAt(1.0, c_trans)
             
             painter.setPen(Qt.NoPen)
             painter.fillPath(path, QBrush(gradient))
@@ -383,6 +409,9 @@ class CharacterCard(QFrame):
         center = rect.center()
         pos = event.pos()
         
+        # Store for paintEvent
+        self._mouse_pos = pos 
+        
         dx = (pos.x() - center.x()) / (rect.width() / 2)
         dy = (pos.y() - center.y()) / (rect.height() / 2)
         
@@ -396,7 +425,67 @@ class CharacterCard(QFrame):
         if hasattr(self, 'image_label'):
             self.image_label.set_transform_params(self._current_zoom, self._current_tilt)
             
+        self.update() # Trigger repaint for holo effect
         super().mouseMoveEvent(event)
+
+    def paintEvent(self, event):
+        # We let the stylesheet handle the base background/border via generic QFrame painting
+        # But we want to add a "Holo Glow" overlay on top or underneath.
+        # Since we want to preserve the rounded corners and content, we'll draw ON TOP 
+        # but with a CompositionMode or just a subtle transparent gradient.
+        
+        super().paintEvent(event)
+        
+        if not hasattr(self, '_mouse_pos') or self._mouse_pos is None:
+            return
+            
+        # Only draw holo effect if mouse is inside (or recently inside)
+        if not self.underMouse():
+            return
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # --- Holographic Border Glow ---
+        # Draw a radial gradient centered on the mouse that highlights the border
+        
+        w, h = self.width(), self.height()
+        path = QPainterPath()
+        path.addRoundedRect(0, 0, w, h, 16, 16) # Match border radius
+        
+        # 1. Stroke Glow (The "Border" lighting up)
+        # Gradient centered at mouse
+        grad = QLinearGradient(0, 0, w, h) # Fallback
+        # Radial looks better for "spotlight" effect on border
+        from PySide6.QtGui import QRadialGradient
+        
+        # We want the glow to be strong near the mouse
+        radial = QRadialGradient(self._mouse_pos, 120) 
+        # Color: Cyan/Blue or based on Theme? Let's go generic Sci-Fi Cyan
+        c_glow = QColor(99, 102, 241, 180) # Indigo-ish
+        c_trans = QColor(99, 102, 241, 0)
+        
+        radial.setColorAt(0.0, c_glow)
+        radial.setColorAt(1.0, c_trans)
+        
+        # Draw the border stroke with this gradient
+        pen = QPen(QBrush(radial), 2)
+        painter.setPen(pen)
+        painter.setBrush(Qt.NoBrush)
+        painter.drawPath(path)
+        
+        # --- 2. Subtle Surface Sheen (Interstellar style) ---
+        # Very faint white/blue wash over the card near mouse
+        
+        sheen_radial = QRadialGradient(self._mouse_pos, 250)
+        c_sheen = QColor(255, 255, 255, 15) # Very subtle
+        sheen_radial.setColorAt(0.0, c_sheen)
+        sheen_radial.setColorAt(1.0, Qt.transparent)
+        
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QBrush(sheen_radial))
+        painter.drawPath(path)
+
 
     card_clicked = Signal(Character)
 

@@ -12,6 +12,14 @@ class ConfigManager:
     ORG_NAME = "Antigravity"
     
     def __init__(self):
+        # Determine application root for assets (not config writability)
+        import sys
+        if getattr(sys, 'frozen', False):
+            self.base_path = os.path.dirname(sys.executable)
+        else:
+            # Assumes src/core/config_manager.py -> project_root/
+            self.base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            
         self.config_dir = QStandardPaths.writableLocation(QStandardPaths.AppConfigLocation)
         self.config_file = os.path.join(self.config_dir, "config.json")
         self._ensure_config_dir()

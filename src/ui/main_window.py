@@ -7,6 +7,7 @@ import os
 import shutil
 import zipfile
 import random
+import json
 from pathlib import Path
 from datetime import datetime
 
@@ -41,6 +42,7 @@ from src.ui.widgets.drag_overlay import DragOverlay
 from src.ui.tabs.create_tab import CreateTab
 from src.ui.components.activity_panel import ActivityPanel
 from src.core.automation_service import AutomationService
+from src.ui.tabs.changelog_tab import ChangelogTab
 
 
 
@@ -315,6 +317,18 @@ class MainWindow(FramelessWindow):
         self.tabs.addTab(self.installed_tab, self.tr("tab_installed"))
 
 
+
+        # Get version dynamically
+        try:
+            with open(os.path.join(self.config_manager.base_path, "version.json"), "r") as f:
+                ver_data = json.load(f)
+                current_ver = ver_data.get("latest_version", "1.0.0")
+        except Exception as e:
+             print(f"Error reading version.json: {e}")
+             current_ver = "1.0.0"
+
+        self.changelog_tab = ChangelogTab(current_version=current_ver) 
+        self.tabs.addTab(self.changelog_tab, self.tr("changelog"))
 
         self.about_tab = AboutTab()
         self.tabs.addTab(self.about_tab, self.tr("tab_credits"))
