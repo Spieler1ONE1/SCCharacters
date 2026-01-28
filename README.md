@@ -51,8 +51,8 @@
 ### Installation
 
 <div align="center">
-  <a href="https://github.com/Spieler1ONE1/SCCharacters/releases/download/v1.0.1/SCCharacters.exe">
-    <img src="https://img.shields.io/badge/Download-SCCharacters_v1.0.1-2ea44f?style=for-the-badge&logo=windows&logoColor=white" alt="Download Now"/>
+  <a href="https://github.com/Spieler1ONE1/SCCharacters/releases/download/v1.0.2/SCCharacters.exe">
+    <img src="https://img.shields.io/badge/Download-SCCharacters_v1.0.2-2ea44f?style=for-the-badge&logo=windows&logoColor=white" alt="Download Now"/>
   </a>
 </div>
 
