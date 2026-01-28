@@ -17,7 +17,7 @@
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features
 
 ### 📂 Seamless Management
 - **One-Click Installation**: Install characters directly from *StarChar.app* or custom URLs.
@@ -105,7 +105,7 @@ Special thanks to these incredible resources that made this project possible:
 
 ## 📜 Credits
 
-**Creator**: [SpielerWAN](https://www.youtube.com/@SpielerWAN)
+**Creator**: [SpielerWAN]([https://www.youtube.com/@SpielerWAN](https://www.twitch.tv/spielerwan))
 *Star Citizen Content Creator*
 
 ---
