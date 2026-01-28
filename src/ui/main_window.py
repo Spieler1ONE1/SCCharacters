@@ -55,6 +55,8 @@ from src.utils.sound_manager import SoundManager
 
 
 from src.ui.frameless_window import FramelessWindow
+from src.ui.controllers.navigation_controller import NavigationController
+from src.ui.controllers.installation_controller import InstallationController
 
 class MainWindow(FramelessWindow):
     EXIT_CODE_REBOOT = 2506
@@ -164,9 +166,6 @@ class MainWindow(FramelessWindow):
         # Connect installed tab signals for advanced features
         self.installed_tab.custom_context_requested.connect(self.show_installed_context_menu)
         self.installed_tab.filter_collection_requested.connect(self.installed_tab.filter_by_collection) 
-        # Connect installed tab signals for advanced features
-        self.installed_tab.custom_context_requested.connect(self.show_installed_context_menu)
-        self.installed_tab.filter_collection_requested.connect(self.installed_tab.filter_by_collection) 
         self.installed_tab.model_updated.connect(self.online_tab.update_installed_registry) # NEW: Sync install status
         self.installed_tab.bulk_add_collection_clicked.connect(self.on_bulk_add_collection)
         self.installed_tab.deploy_loadout_clicked.connect(self.on_deploy_loadout)
@@ -188,6 +187,10 @@ class MainWindow(FramelessWindow):
         # Start File Watcher
         self.character_service.start_watcher(self.on_files_changed_externally)
 
+        # --- Controllers ---
+        self.navigation = NavigationController(self)
+        self.installation_controller = InstallationController(self.character_service, self)
+        
         # Automation Service
         self.automation_service = AutomationService(self.config_manager, self.character_service)
         self.automation_service.log_message.connect(self.activity_panel.add_log_message)
@@ -327,12 +330,23 @@ class MainWindow(FramelessWindow):
         self.toast = ToastNotification(self)
 
     def on_tab_changed(self, index):
+        """Unified tab change handler."""
+        # Notify Controller
+        if hasattr(self, 'navigation'):
+             # We could delegate this entirely to navigation, but for now we sync logic here
+             pass
+
         tab_name = self.tabs.tabText(index)
+        
+        # Logic from original on_tab_changed (Discord)
         if index == 0: # Online
             self.discord_manager.update_presence("Browsing Online Characters", "Looking for a new face")
         elif index == 1: # Create
             self.discord_manager.update_presence("Creating Character", "Using StarChar.app")
         elif index == 2: # Installed
+            # Logic from duplicate on_tab_changed (Load Data)
+            self.installed_tab.load_characters()
+            
             count = len(self.installed_character_widgets)
             self.discord_manager.update_presence("Managing Fleet", f"{count} Characters Installed")
         elif index == 3: # About
@@ -498,9 +512,7 @@ class MainWindow(FramelessWindow):
         if getattr(self, 'splash_overlay', None) and self.splash_overlay.isVisible():
             self.splash_overlay.resize(self.size())
 
-    def on_tab_changed(self, index):
-        if index == 2: # Installed tab
-            self.installed_tab.load_characters()
+    # Duplicate on_tab_changed removed and merged into the main one above.
 
     def open_website(self):
         webbrowser.open("https://www.star-citizen-characters.com")
