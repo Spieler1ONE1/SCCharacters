@@ -327,10 +327,7 @@ class MainWindow(FramelessWindow):
              print(f"Error reading version.json: {e}")
              current_ver = "1.0.0"
 
-        self.changelog_tab = ChangelogTab(current_version=current_ver) 
-        self.tabs.addTab(self.changelog_tab, self.tr("changelog"))
-
-        self.about_tab = AboutTab()
+        self.about_tab = AboutTab(current_version=current_ver)
         self.tabs.addTab(self.about_tab, self.tr("tab_credits"))
         
         self.tabs.currentChanged.connect(self.on_tab_changed)

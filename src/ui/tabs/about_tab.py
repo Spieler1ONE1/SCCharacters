@@ -1,20 +1,12 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QPushButton, QFrame, QGraphicsOpacityEffect, 
-                                QHBoxLayout, QGridLayout, QSizePolicy)
+                                QHBoxLayout, QGridLayout, QSizePolicy, QTabWidget)
 from PySide6.QtCore import (Qt, QUrl, QSize, QPropertyAnimation, QParallelAnimationGroup, 
                             QSequentialAnimationGroup, QEasingCurve)
 from PySide6.QtGui import QDesktopServices, QFont, QCursor, QIcon, QPixmap
 import os
 from src.ui.styles import ThemeColors
 from src.utils.translations import translator
-
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QPushButton, QFrame, QGraphicsOpacityEffect, 
-                                QHBoxLayout, QGridLayout, QSizePolicy)
-from PySide6.QtCore import (Qt, QUrl, QSize, QPropertyAnimation, QParallelAnimationGroup, 
-                            QSequentialAnimationGroup, QEasingCurve)
-from PySide6.QtGui import QDesktopServices, QFont, QCursor, QIcon, QPixmap
-import os
-from src.ui.styles import ThemeColors
-from src.utils.translations import translator
+from src.ui.tabs.changelog_tab import ChangelogTab
 
 class TechButton(QPushButton):
     """Minimalist Sci-Fi Button with Hover Glow Effect"""
@@ -56,7 +48,7 @@ class TechButton(QPushButton):
     def open_link(self):
         QDesktopServices.openUrl(QUrl(self.url))
 
-class AboutTab(QWidget):
+class CreditsWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.setup_ui()
@@ -292,3 +284,51 @@ class AboutTab(QWidget):
                 border: 1px solid #fbbf24;
             }}
         """)
+
+class AboutTab(QWidget):
+    """
+    Main info tab that holds Credits and Changelog in sub-tabs.
+    """
+    def __init__(self, current_version="1.0.0"):
+        super().__init__()
+        self.current_version = current_version
+        self.setup_ui()
+        
+    def tr(self, key):
+        return translator.get(key)
+        
+    def setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 10, 0, 0)
+        
+        # Create sub-tabs
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("""
+            QTabWidget::pane { border: 0; }
+            QTabBar::tab {
+                background: transparent;
+                color: #64748b;
+                padding: 8px 16px;
+                border-bottom: 2px solid transparent;
+                font-weight: bold;
+            }
+            QTabBar::tab:selected {
+                color: #38bdf8;
+                border-bottom: 2px solid #38bdf8;
+            }
+            QTabBar::tab:hover {
+                color: #e2e8f0;
+            }
+        """)
+        
+        self.credits_widget = CreditsWidget()
+        self.changelog_widget = ChangelogTab(self.current_version)
+        
+        self.tabs.addTab(self.credits_widget, self.tr("tab_credits"))
+        self.tabs.addTab(self.changelog_widget, self.tr("changelog"))
+        
+        layout.addWidget(self.tabs)
+        
+    def update_theme(self, is_dark):
+        if hasattr(self, 'credits_widget'):
+            self.credits_widget.update_theme(is_dark)
