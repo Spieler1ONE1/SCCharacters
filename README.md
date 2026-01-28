@@ -17,7 +17,7 @@
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features
 
 ### 📂 Seamless Management
 - **One-Click Installation**: Install characters directly from *StarChar.app* or custom URLs.
