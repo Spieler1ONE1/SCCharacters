@@ -1,7 +1,7 @@
 # 🧬 BioMetrics System & Manager
 > *Advanced Character Identity Management for Star Citizen*
 
-![Version](https://img.shields.io/badge/version-1.0.1-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/TGjCmzHR)
+![Version](https://img.shields.io/badge/version-1.0.2-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/TGjCmzHR)
 
 **SCCharacters (BioMetrics)** is a powerful, immersive desktop application designed to streamline the management, installation, and customization of your Star Citizen character appearances (`.chf` files). Built with a modern, sci-fi aesthetic that mirrors the in-game universe, this tool serves as your personal extensive biometric database.
 
