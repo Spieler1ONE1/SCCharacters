@@ -1,6 +1,6 @@
 {
-    "latest_version": "1.0.2",
+    "latest_version": "2.0.0",
     "download_url": "https://github.com/Spieler1ONE1/SCCharacters/releases/latest/download/SCCharacters.exe",
-    "changelog": "- Fix error crítico en la configuración.\n- Arreglo del visor de registros (Logs).\n- Eliminación de herramientas redundantes (Maintenance/Stats) para mayor simplicidad.\n- Sistema de actualizaciones automáticas activado.",
+    "changelog": "- Nueva versión mayor con interfaz rediseñada y estabilidad mejorada.\n- Traducciones completas a múltiples idiomas (Español, Francés, Alemán, Portugués, Ruso, Chino, Japonés, Árabe).\n- Nuevas animaciones de transición de temas.\n- Backups más robustos y correcciones críticas en la instalación.",
     "sha256": ""
 }
