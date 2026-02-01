@@ -125,11 +125,11 @@ class NewsCard(QFrame):
         content_layout.setSpacing(6)
         
         # Meta (Date / Source)
-        date_str = "Unknown Date"
+        date_str = translator.get("news_date_unknown")
         if isinstance(item['date'], datetime.datetime):
              date_str = item['date'].strftime("%b %d, %Y").upper()
         else:
-             date_str = "RECENT TRANSMISSION"
+             date_str = translator.get("news_recent")
 
         self.meta_lbl = QLabel(f"{date_str} // {item['source'].upper()}")
         self.meta_lbl.setStyleSheet("font-size: 10px; color: #6366f1; font-weight: bold; letter-spacing: 1px;")
@@ -180,7 +180,7 @@ class NewsCard(QFrame):
         if item.get('image_url'):
             self.image_loader.load_image(item['image_url'], self._on_image_loaded)
         else:
-            self.img_lbl.setText("NO SIGNAL")
+            self.img_lbl.setText(translator.get("news_no_signal_image"))
             self.img_lbl.setStyleSheet("color: #475569; font-weight: bold;" + self.img_lbl.styleSheet())
 
     def _on_image_loaded(self, pixmap):
@@ -287,10 +287,10 @@ class NewsTab(QWidget):
         
         # Header / Status
         self.header_layout = QHBoxLayout()
-        self.lbl_status = QLabel("Checking comms array...")
+        self.lbl_status = QLabel(translator.get("checking_comms"))
         self.lbl_status.setStyleSheet("color: #64748b; font-size: 12px;")
         
-        btn_refresh = QPushButton("Refresh Signal")
+        btn_refresh = QPushButton(translator.get("refresh_signal"))
         btn_refresh.setCursor(Qt.PointingHandCursor)
         btn_refresh.clicked.connect(self.refresh_news)
         btn_refresh.setStyleSheet("""
@@ -333,7 +333,7 @@ class NewsTab(QWidget):
         layout.addWidget(self.scroll)
 
     def refresh_news(self):
-        self.lbl_status.setText("Establishing uplink...")
+        self.lbl_status.setText(translator.get("uplink_establishing"))
         self.current_page = 1
         self.all_news_items = []
         self.displayed_count = 0
@@ -357,8 +357,8 @@ class NewsTab(QWidget):
         self.is_fetching = False
         
         if not items and self.current_page == 1:
-            self.lbl_status.setText("No signal detected.")
-            lbl_empty = QLabel("No active transmissions found in sector.")
+            self.lbl_status.setText(translator.get("no_signal"))
+            lbl_empty = QLabel(translator.get("no_transmissions_in_sector"))
             lbl_empty.setAlignment(Qt.AlignCenter)
             lbl_empty.setStyleSheet("color: #64748b; font-size: 16px; margin-top: 50px;")
             self.content_layout.addWidget(lbl_empty)
@@ -366,15 +366,15 @@ class NewsTab(QWidget):
             
         if not items:
             # End of all pages
-            self.lbl_status.setText("Archive limit reached.")
+            self.lbl_status.setText(translator.get("archive_limit"))
             # Add end label
-            lbl_end = QLabel("--- End of Transmissions ---")
+            lbl_end = QLabel(translator.get("end_of_transmissions"))
             lbl_end.setAlignment(Qt.AlignCenter)
             lbl_end.setStyleSheet("color: #475569; font-size: 11px; margin: 20px 0;")
             self.content_layout.addWidget(lbl_end)
             return
 
-        self.lbl_status.setText(f"Uplink Established. Archive Page {self.current_page}.")
+        self.lbl_status.setText(translator.get("uplink_established_fmt", page=self.current_page))
         
         # Append new items to master list
         old_count = len(self.all_news_items)

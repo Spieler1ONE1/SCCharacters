@@ -394,6 +394,7 @@ class MainWindow(FramelessWindow):
         self.installed_tab.character_clicked.connect(self.show_character_detail)
         self.installed_tab.delete_clicked.connect(self.uninstall_character)
         self.installed_tab.bulk_delete_clicked.connect(self.uninstall_multiple_characters)
+        self.installed_tab.bulk_delete_clicked.connect(self.uninstall_multiple_characters)
         self.tabs.addTab(self.installed_tab, self.tr("tab_installed"))
 
 
@@ -441,8 +442,10 @@ class MainWindow(FramelessWindow):
             
             count = len(self.installed_character_widgets)
             self.discord_manager.update_presence("Managing Fleet", f"{count} Characters Installed")
-        elif index == 4: # About
-            self.discord_manager.update_presence("Checking Credits", "Admiring the work")
+        elif index == 4: # Fleet
+             self.discord_manager.update_presence("Fleet Ops", "Reviewing Organization Manifest")
+        elif index == 5: # About (index shifted)
+             self.discord_manager.update_presence("Checking Credits", "Admiring the work")
 
     def closeEvent(self, event):
         try:

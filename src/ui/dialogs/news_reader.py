@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
                                QLabel, QWidget, QProgressBar, QFrame, QGraphicsOpacityEffect, QSizeGrip)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWebEngineCore import QWebEngineScript, QWebEngineUrlRequestInterceptor, QWebEngineSettings
+from src.utils.translations import translator
 
 class WebInterceptor(QWebEngineUrlRequestInterceptor):
     def interceptRequest(self, info):
@@ -151,7 +152,7 @@ class TranslationSignals(QObject):
 class NewsReaderDialog(QDialog):
     def __init__(self, url=None, html_content=None, title="News", parent=None, target_language=None):
         super().__init__(parent)
-        self.setWindowTitle("Secure Uplink")
+        self.setWindowTitle(translator.get('secure_uplink'))
         self.resize(1100, 800)
         self.setMinimumSize(600, 400) # Prevent inverting or confusing resize behavior
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
@@ -181,7 +182,7 @@ class NewsReaderDialog(QDialog):
             self.web_view.load(QUrl(url))
             
         if self.pending_lang:
-             self.lbl_title.setText(f"ESTABLISHING UPLINK ({self.pending_lang})...")
+             self.lbl_title.setText(f"{translator.get('uplink_establishing')} ({self.pending_lang})...")
 
         # ANIMATION: Entry
         self.setWindowOpacity(0.0)
@@ -299,7 +300,7 @@ class NewsReaderDialog(QDialog):
         self.lbl_title.setStyleSheet("color: #f8fafc; font-weight: bold; font-size: 14px; border: none;")
         
         # Controls
-        self.btn_close = QPushButton("CLOSE TRANSMISSION")
+        self.btn_close = QPushButton(translator.get('close_transmission'))
         self.btn_close.setCursor(Qt.PointingHandCursor)
         self.btn_close.clicked.connect(self.close_animated)
         self.btn_close.setStyleSheet("""
@@ -466,7 +467,7 @@ class NewsReaderDialog(QDialog):
 
     def start_translation(self, lang_code):
         self.pending_lang = lang_code
-        self.lbl_title.setText("ESTABLISHING UPLINK...")
+        self.lbl_title.setText(translator.get('uplink_establishing'))
         
     def _handle_cert_error(self, error):
         error.ignoreCertificateError()
@@ -484,13 +485,13 @@ class NewsReaderDialog(QDialog):
             self.active_translation_lang = self.pending_lang
             self.pending_lang = None
             
-            self.lbl_title.setText("SIGNAL ACQUIRED - DECODING...")
+            self.lbl_title.setText(translator.get('uplink_acquired'))
             self.progress_bar.setVisible(True)
             self.progress_bar.setRange(0,0) 
             self.web_view.page().toHtml(self._process_html)
             
         elif not success:
-             self.lbl_title.setText("CONNECTION FAILED")
+             self.lbl_title.setText(translator.get('uplink_failed'))
 
     def _accept_cookies(self):
         # Inject script to click known "Accept" buttons with polling
@@ -564,7 +565,7 @@ class NewsReaderDialog(QDialog):
 
     def set_content(self, html):
         self.web_view.setHtml(html, QUrl("https://robertsspaceindustries.com"))
-        self.lbl_title.setText("TRANSMISSION DECODED")
+        self.lbl_title.setText(translator.get('uplink_decoded'))
         self.progress_bar.setVisible(False)
         self.progress_bar.setRange(0, 100)
         

@@ -76,7 +76,7 @@ class InstalledTab(QWidget):
         
         # Collection Filter
         self.filter_collection_combo = QComboBox()
-        self.filter_collection_combo.addItem("All Collections") # default
+        self.filter_collection_combo.addItem(self.tr("all_collections")) # default
         self.filter_collection_combo.setMinimumHeight(40)
         self.filter_collection_combo.currentIndexChanged.connect(self.on_collection_filter_changed)
         self.filter_collection_combo.currentIndexChanged.connect(self.on_collection_filter_changed)
@@ -96,12 +96,12 @@ class InstalledTab(QWidget):
         toolbar_layout.addWidget(line)
         
         # Backups
-        btn_backup = QPushButton("💾 Backup")
+        btn_backup = QPushButton(f"💾 {self.tr('backup_btn')}")
         btn_backup.setToolTip("Full Backup")
         btn_backup.clicked.connect(self.request_backup)
         toolbar_layout.addWidget(btn_backup)
         
-        btn_restore = QPushButton("♻️ Restore")
+        btn_restore = QPushButton(f"♻️ {self.tr('restore_btn')}")
         btn_restore.setToolTip("Restore from Zip")
         btn_restore.clicked.connect(self.request_restore)
         toolbar_layout.addWidget(btn_restore)
@@ -361,7 +361,7 @@ class InstalledTab(QWidget):
         self.filter_collection_combo.blockSignals(True)
         self.filter_collection_combo.clear()
         
-        self.filter_collection_combo.addItem("All Collections")
+        self.filter_collection_combo.addItem(self.tr("all_collections"))
         for col in self.collection_manager.get_all_collections():
             self.filter_collection_combo.addItem(col)
             
