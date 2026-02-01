@@ -174,8 +174,10 @@ def get_stylesheet(theme_mode: str) -> str:
     }}
     
     /* --- Main Content Area --- */
+    /* --- Main Content Area --- */
     QWidget#CentralWidget {{
-        background-color: {c.bg_primary};
+        /* Premium Background Gradient */
+        background-color: qradialgradient(cx:0.5, cy:0, radius: 1.2, fx:0.5, fy:0, stop:0 #1e293b, stop:1 #0f172a);
         border: 1px solid {c.border};
         border-radius: 12px;
     }}

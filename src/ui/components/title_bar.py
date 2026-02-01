@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QMenuBar
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QMenuBar, QApplication
 from PySide6.QtCore import Qt, Signal, QPoint
 import os
 
@@ -18,6 +18,7 @@ class TitleBar(QWidget):
         self.layout.setContentsMargins(15, 0, 0, 0)
         self.layout.setSpacing(10)
         
+        self._drag_start_pos = None
         
         # Icon
         self.icon_label = QLabel()
@@ -89,9 +90,26 @@ class TitleBar(QWidget):
         self.btn_mute.setText("🔇" if self.is_muted else "🔊")
         self.mute_toggled.emit(self.is_muted)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._drag_start_pos = event.globalPosition().toPoint()
+            event.accept() 
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() & Qt.LeftButton and self._drag_start_pos:
+            dist = (event.globalPosition().toPoint() - self._drag_start_pos).manhattanLength()
+            if dist > QApplication.startDragDistance():
+                if self.window().windowHandle():
+                    self.window().windowHandle().startSystemMove()
+                    self._drag_start_pos = None
+        super().mouseMoveEvent(event)
+
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.maximize_clicked.emit()
+            event.accept()
         super().mouseDoubleClickEvent(event)
 
 class CustomMenuBar(QMenuBar):

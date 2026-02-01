@@ -1,6 +1,6 @@
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QScrollArea, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QApplication, QGraphicsBlurEffect
-from PySide6.QtCore import Qt, QSize, QUrl, QPropertyAnimation, QEasingCurve, QPoint, QRect, Signal, QTimer, QParallelAnimationGroup, QVariantAnimation
+from PySide6.QtCore import Qt, QSize, QUrl, QPropertyAnimation, QEasingCurve, QPoint, QRect, Signal, QTimer, QParallelAnimationGroup, QVariantAnimation, Property
 from PySide6.QtGui import QPixmap, QDesktopServices, QColor, QPainter, QBrush, QPainterPath, QPen, QLinearGradient
 from src.core.models import Character
 from src.utils.image_loader import ImageLoader
@@ -157,46 +157,68 @@ class CharacterDetailModal(QWidget):
         # Transparent background for the widget itself (we paint the dim overlay in paintEvent)
         self.setAttribute(Qt.WA_NoSystemBackground)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        
-        # Opacity Effect for Fade Animation
-        self.opacity_effect = QGraphicsOpacityEffect(self)
-        self.opacity_effect.setOpacity(0)
-        self.setGraphicsEffect(self.opacity_effect)
+        self.is_animating = False # Initialize early to avoid resizeEvent crash
         
         self.setup_ui()
         self.load_image()
+
+    def showEvent(self, event):
+        # Initialize opacity
+        self.set_bg_opacity(0.0)
         
-    def paintEvent(self, event):
-        # Draw the semi-transparent overlay background
-        painter = QPainter(self)
-        if not painter.isActive():
-             return
+        self.anim = QParallelAnimationGroup()
+        
+        # Background Opacity Animation (Custom Property)
+        anim_op = QPropertyAnimation(self, b"bg_opacity")
+        anim_op.setDuration(300)
+        anim_op.setStartValue(0.0)
+        anim_op.setEndValue(1.0)
+        anim_op.setEasingCurve(QEasingCurve.OutQuad)
+        
+        # Geometry / Position
+        self._update_container_geometry()
+        target_geo = self.container.geometry()
+        start_geo = QRect(target_geo)
+        start_geo.translate(0, 50)
+        self.container.setGeometry(start_geo)
+        
+        anim_move = QPropertyAnimation(self.container, b"geometry")
+        anim_move.setDuration(400)
+        anim_move.setStartValue(start_geo)
+        anim_move.setEndValue(target_geo)
+        anim_move.setEasingCurve(QEasingCurve.OutBack)
+        
+        self.anim.addAnimation(anim_op)
+        self.anim.addAnimation(anim_move)
+        
+        self.is_animating = True
+        self.anim.finished.connect(self._on_shown_finished)
+        self.anim.start()
+        super().showEvent(event)
+
+    def _on_shown_finished(self):
+        self.is_animating = False
         try:
-            painter.setBrush(QColor(0, 0, 0, 180)) # Dark dim
-            painter.setPen(Qt.NoPen)
-            painter.drawRect(self.rect())
-        finally:
-            painter.end()
-        
+            self.image_widget.start_biometric_scan()
+        except RuntimeError:
+            pass # Object deleted
+
+    def set_image(self, pixmap):
+        try:
+            if not hasattr(self, 'image_widget'): return
+            self.image_widget.setPixmap(pixmap)
+        except RuntimeError:
+            pass # Object deleted
+
     def setup_ui(self):
-        # Determine theme
         is_dark = True
         if self.parent() and hasattr(self.parent(), 'theme_manager'):
              is_dark = (self.parent().theme_manager.get_effective_theme() == 'dark')
         c = ThemeColors(is_dark)
+        self.c = c # Store for helpers
 
-        # Layout - WE USE MANUAL LAYOUT (resizeEvent) to avoid conflict with animations
-        # self.main_layout = QVBoxLayout(self)
-        # self.main_layout.setContentsMargins(20, 20, 20, 20)
-        # self.main_layout.setAlignment(Qt.AlignCenter)
-        
-        # Content Container
         self.container = QFrame(self)
         self.container.setObjectName("DetailContainer")
-        # Max size constraint
-        # Note: We'll update fixed size in resizeEvent too strictly speaking, 
-        # but relative layout usually handles it if we don't fix it.
-        # Let's use maximumSize and let layout handle centering.
         self.container.setMinimumSize(900, 600)
         self.container.setMaximumSize(1100, 850)
         
@@ -209,7 +231,6 @@ class CharacterDetailModal(QWidget):
             QLabel {{ color: {c.text_primary}; border: none; background: none; }}
         """)
         
-        # Shadow
         shadow = QGraphicsDropShadowEffect(self.container)
         shadow.setBlurRadius(50)
         shadow.setColor(QColor(0, 0, 0, 100))
@@ -220,24 +241,39 @@ class CharacterDetailModal(QWidget):
         container_layout.setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(0)
         
-        # LEFT: Image
+        # Left Side: Image
         self.image_widget = CoverImageWidget()
         self.image_widget.setMinimumWidth(400)
         container_layout.addWidget(self.image_widget, 40)
         
-        # RIGHT: Info
+        # Right Side: Info Panel
         info_panel = QWidget()
-        info_layout = QVBoxLayout(info_panel)
-        info_layout.setContentsMargins(30, 30, 30, 30)
-        info_layout.setSpacing(15)
+        self.info_layout = QVBoxLayout(info_panel)
+        self.info_layout.setContentsMargins(30, 30, 30, 30)
+        self.info_layout.setSpacing(15)
         
-        # Header (Title + Close)
+        self._setup_header(c)
+        
+        author_label = QLabel(translator.get("by_author", author=self.character.author))
+        author_label.setStyleSheet(f"font-size: 18px; color: {c.accent}; font-weight: 600;")
+        self.info_layout.addWidget(author_label)
+        
+        self.add_divider(self.info_layout, c)
+        self._setup_stats(c)
+        self._setup_tags(c)
+        
+        self.info_layout.addStretch()
+        
+        self._setup_actions(c)
+        
+        container_layout.addWidget(info_panel, 60)
+
+    def _setup_header(self, c):
         header_layout = QHBoxLayout()
         title_label = QLabel(self.character.name)
         title_label.setStyleSheet(f"font-size: 36px; font-weight: 800; color: {c.text_primary};")
         title_label.setWordWrap(True)
         
-        # Close Button
         close_btn = QPushButton("✕")
         close_btn.setObjectName("DetailCloseBtn")
         close_btn.setFixedSize(36, 36)
@@ -250,9 +286,6 @@ class CharacterDetailModal(QWidget):
                 font-size: 16px; 
                 border-radius: 18px;
                 border: none;
-                image: none;
-                border-image: none;
-                background-image: none;
             }}
             QPushButton#DetailCloseBtn:hover {{
                 background-color: {c.error}; 
@@ -263,18 +296,15 @@ class CharacterDetailModal(QWidget):
         header_layout.addWidget(title_label, 1)
         header_layout.setAlignment(Qt.AlignTop)
         
-        # Action Row (Fav + Close)
         action_row = QHBoxLayout()
         action_row.setSpacing(10)
         
-        # Fav Button
         self.btn_fav = QPushButton("♥")
         self.btn_fav.setFixedSize(36, 36)
         self.btn_fav.setCursor(Qt.PointingHandCursor)
-        self.update_fav_style(False) # Init state, will be updated if parent has config
+        self.update_fav_style(False) 
         self.btn_fav.clicked.connect(self.toggle_fav)
         
-        # Check initial state from config if possible
         if self.parent() and hasattr(self.parent(), 'config_manager'):
              is_fav = self.parent().config_manager.is_favorite(self.character.name)
              self.update_fav_style(is_fav)
@@ -283,28 +313,20 @@ class CharacterDetailModal(QWidget):
         action_row.addWidget(close_btn)
         
         header_layout.addLayout(action_row)
-        info_layout.addLayout(header_layout)
-        
-        # Author
-        author_label = QLabel(translator.get("by_author", author=self.character.author))
-        author_label.setStyleSheet(f"font-size: 18px; color: {c.accent}; font-weight: 600;")
-        info_layout.addWidget(author_label)
-        
-        # Divider
-        self.add_divider(info_layout, c)
-        
-        # Stats
+        self.info_layout.addLayout(header_layout)
+
+    def _setup_stats(self, c):
         stats_grid = QHBoxLayout()
         stats_grid.setSpacing(30)
         self.add_stat_big(stats_grid, translator.get("stat_downloads"), self.character.downloads or 0, "⬇", c)
         self.add_stat_big(stats_grid, translator.get("stat_likes"), self.character.likes or 0, "♥", c)
         stats_grid.addStretch()
-        info_layout.addLayout(stats_grid)
-        
-        # Tags
+        self.info_layout.addLayout(stats_grid)
+
+    def _setup_tags(self, c):
         lbl_tags = QLabel(translator.get("label_tags"))
         lbl_tags.setStyleSheet(f"font-size: 14px; font-weight: 700; color: {c.text_secondary}; text-transform: uppercase; letter-spacing: 1px;")
-        info_layout.addWidget(lbl_tags)
+        self.info_layout.addWidget(lbl_tags)
 
         tags_scroll = QScrollArea()
         tags_scroll.setWidgetResizable(True)
@@ -335,7 +357,6 @@ class CharacterDetailModal(QWidget):
                         border-color: {c.accent_hover};
                     }}
                 """)
-                # Capture tag variable in lambda default arg
                 pub_btn.clicked.connect(lambda checked=False, t=tag: self.on_tag_click(t))
                 tags_flow.addWidget(pub_btn)
         else:
@@ -344,11 +365,9 @@ class CharacterDetailModal(QWidget):
              tags_flow.addWidget(lbl)
              
         tags_scroll.setWidget(tags_content)
-        info_layout.addWidget(tags_scroll)
-        
-        info_layout.addStretch()
-        
-        # Actions
+        self.info_layout.addWidget(tags_scroll)
+
+    def _setup_actions(self, c):
         actions_layout = QHBoxLayout()
         actions_layout.setSpacing(15)
         
@@ -364,9 +383,6 @@ class CharacterDetailModal(QWidget):
                 font-weight: 600;
                 border-radius: 12px;
                 padding: 0 20px;
-                image: none;
-                border-image: none;
-                background-image: none;
             }}
             QPushButton#DetailWebBtn:hover {{
                 border-color: {c.text_secondary};
@@ -388,9 +404,6 @@ class CharacterDetailModal(QWidget):
                 border: none;
                 border-radius: 12px;
                 padding: 0 30px;
-                image: none;
-                border-image: none;
-                background-image: none;
             }}
             QPushButton#DetailInstallBtn:hover {{
                 background-color: {c.accent_hover};
@@ -405,10 +418,7 @@ class CharacterDetailModal(QWidget):
              self.set_installed_state()
         else:
              self.btn_install.clicked.connect(self.on_install_requested)
-
-
         
-        # Share Button
         btn_share = QPushButton("📸")
         btn_share.setToolTip(translator.get("share"))
         btn_share.setCursor(Qt.PointingHandCursor)
@@ -428,9 +438,6 @@ class CharacterDetailModal(QWidget):
         """)
         btn_share.clicked.connect(self.generate_share_card)
 
-
-
-        # Holo ID Button
         btn_holo = QPushButton("🆔")
         btn_holo.setToolTip("Export Holo-ID")
         btn_holo.setCursor(Qt.PointingHandCursor)
@@ -455,23 +462,20 @@ class CharacterDetailModal(QWidget):
         actions_layout.addWidget(btn_view_web)
         actions_layout.addWidget(self.btn_install)
         
-        info_layout.addLayout(actions_layout)
-        
-        container_layout.addWidget(info_panel, 60)
-        # self.main_layout.addWidget(self.container) # No layout
-        
-        self.is_animating = False
+        self.info_layout.addLayout(actions_layout)
 
     def resizeEvent(self, event):
-        # Manual centering to support animation without fighting layout
+        self._update_container_geometry()
+        if event:
+            super().resizeEvent(event)
+
+    def _update_container_geometry(self):
         if not hasattr(self, 'container'): return
         
-        # Calculate target size (mimic previous constraints)
         w = min(self.width() - 40, 1100)
         h = min(self.height() - 40, 850)
         w = max(w, 900)
         h = max(h, 600)
-        
         # Ensure it fits screen even if smaller than min
         w = min(w, self.width() - 20)
         h = min(h, self.height() - 20)
@@ -481,25 +485,18 @@ class CharacterDetailModal(QWidget):
         
         target_rect = QRect(int(x), int(y), int(w), int(h))
         
-        # Only update if NOT currently animating (or if we are initializing)
         if not self.is_animating:
             self.container.setGeometry(target_rect)
-            
-        super().resizeEvent(event)
 
     def add_stat_big(self, layout, label, value, icon, c):
         v_box = QVBoxLayout()
         v_box.setSpacing(2)
-        
         val_str = str(value)
         if value >= 1000: val_str = f"{value/1000:.1f}k"
-        
         lbl_val = QLabel(f"{icon} {val_str}")
         lbl_val.setStyleSheet(f"font-size: 24px; font-weight: 800; color: {c.text_primary};")
-        
         lbl_desc = QLabel(label.upper())
         lbl_desc.setStyleSheet(f"font-size: 11px; font-weight: 700; color: {c.text_secondary}; letter-spacing: 1px;")
-        
         v_box.addWidget(lbl_val)
         v_box.addWidget(lbl_desc)
         layout.addLayout(v_box)
@@ -518,105 +515,126 @@ class CharacterDetailModal(QWidget):
                 self.character.image_url,
                 self.set_image
             )
-            
-    def set_image(self, pixmap):
-        self.image_widget.setPixmap(pixmap)
-        
+
+    # set_image is at top of this block due to chunk replacement logic order
+    
+    def closeEvent(self, event):
+        # Stop all animations
+        if hasattr(self, 'anim'):
+            self.anim.stop()
+        if hasattr(self, 'anim_close'):
+            self.anim_close.stop()
+        if hasattr(self, 'anim_group_close'):
+            self.anim_group_close.stop()
+        super().closeEvent(event)
+
     def on_install_requested(self):
         self.btn_install.setText(translator.get("downloading"))
         self.btn_install.setEnabled(False)
         self.install_clicked.emit(self.character)
         
     def set_installed_state(self):
-        # Update UI to show installed
-        c = ThemeColors(False) # Default/Base colors or try to get dynamic?
-        # Actually we need theme context.
-        # But for green success, hardcoded is usually fine or from ThemeColors
+        if not hasattr(self, 'btn_install'): return
         self.btn_install.setText(translator.get("installed"))
         self.btn_install.setEnabled(False)
         self.btn_install.setStyleSheet(f"background-color: #10b981; color: white; border: none; border-radius: 12px; font-weight: 700;")
-
+ 
     def mousePressEvent(self, event):
-        # Close if clicked outside
-        if not self.container.geometry().contains(event.pos()):
+        if hasattr(self, 'container') and not self.container.geometry().contains(event.pos()):
             self.animate_close()
+
+    def get_bg_opacity(self):
+        return getattr(self, '_bg_opacity', 0.0)
+
+    def set_bg_opacity(self, val):
+        self._bg_opacity = val
+        self.update()
+
+    bg_opacity = Property(float, get_bg_opacity, set_bg_opacity)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        if not painter.isActive():
+             return
+        try:
+            opacity = self.get_bg_opacity()
+            alpha = int(180 * opacity)
+            painter.setBrush(QColor(0, 0, 0, alpha))
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.rect())
+        finally:
+            painter.end()
         
     def showEvent(self, event):
-        if not self.graphicsEffect():
-            self.opacity_effect = QGraphicsOpacityEffect(self)
-            self.setGraphicsEffect(self.opacity_effect)
-
-        self.anim = QParallelAnimationGroup()
-        
-        # Opacity
-        anim_op = QPropertyAnimation(self.opacity_effect, b"opacity")
-        anim_op.setDuration(300)
-        anim_op.setStartValue(0.0)
-        anim_op.setEndValue(1.0)
-        anim_op.setEasingCurve(QEasingCurve.OutQuad)
-        
-        # Geometry / Position (Pop up effect)
-        # Force calculation of target geometry first
-        self.resizeEvent(None)
-        
-        target_geo = self.container.geometry()
-        start_geo = QRect(target_geo)
-        start_geo.translate(0, 50)
-        
-        self.container.setGeometry(start_geo)
-        
-        anim_move = QPropertyAnimation(self.container, b"geometry")
-        anim_move.setDuration(400)
-        anim_move.setStartValue(start_geo)
-        anim_move.setEndValue(target_geo)
-        anim_move.setEasingCurve(QEasingCurve.OutBack) # Spring effect
-        
-        self.anim.addAnimation(anim_op)
-        self.anim.addAnimation(anim_move)
-        
-        self.is_animating = True
-        self.anim.finished.connect(self._on_shown_finished)
-        self.anim.start()
+        try:
+            # Initialize opacity
+            self.set_bg_opacity(0.0)
+            
+            self.anim = QParallelAnimationGroup()
+            
+            # Background Opacity Animation (Custom Property)
+            anim_op = QPropertyAnimation(self, b"bg_opacity")
+            anim_op.setDuration(300)
+            anim_op.setStartValue(0.0)
+            anim_op.setEndValue(1.0)
+            anim_op.setEasingCurve(QEasingCurve.OutQuad)
+            
+            # Geometry / Position
+            self._update_container_geometry()
+            target_geo = self.container.geometry()
+            start_geo = QRect(target_geo)
+            start_geo.translate(0, 50)
+            self.container.setGeometry(start_geo)
+            
+            anim_move = QPropertyAnimation(self.container, b"geometry")
+            anim_move.setDuration(400)
+            anim_move.setStartValue(start_geo)
+            anim_move.setEndValue(target_geo)
+            anim_move.setEasingCurve(QEasingCurve.OutBack)
+            
+            self.anim.addAnimation(anim_op)
+            self.anim.addAnimation(anim_move)
+            
+            self.is_animating = True
+            self.anim.finished.connect(self._on_shown_finished)
+            self.anim.start()
+        except Exception:
+            pass
+            
         super().showEvent(event)
 
     def _on_shown_finished(self):
-        self.setGraphicsEffect(None)
         self.is_animating = False
         self.image_widget.start_biometric_scan()
 
     def animate_close(self):
-        # Prevent multiple calls
-        if getattr(self, '_is_closing', False):
-            return
+        if getattr(self, '_is_closing', False): return
         self._is_closing = True
 
-        # Stop any running open animations
         if hasattr(self, 'anim') and (self.anim.state() == QPropertyAnimation.Running):
             self.anim.stop()
 
-        # IMPORTANT: If show animation just finished, graphicsEffect might be None.
-        # We need it for opacity animation.
-        self.opacity_effect = QGraphicsOpacityEffect(self)
-        self.opacity_effect.setOpacity(1.0)
-        self.setGraphicsEffect(self.opacity_effect)
-
-        self.anim_close = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.anim_close.setDuration(150)
-        self.anim_close.setStartValue(1.0)
+        self.anim_close = QPropertyAnimation(self, b"bg_opacity")
+        self.anim_close.setDuration(200)
+        self.anim_close.setStartValue(self.get_bg_opacity())
         self.anim_close.setEndValue(0.0)
         self.anim_close.setEasingCurve(QEasingCurve.InQuad)
         
-        # Ensure we only connect once
-        try:
-            self.anim_close.finished.disconnect()
-        except:
-            pass
-            
-        self.anim_close.finished.connect(self._on_closed)
-        self.anim_close.start()
+        # Also slide out the container? Optional, but looks nice
+        anim_move = QPropertyAnimation(self.container, b"geometry")
+        anim_move.setDuration(200)
+        anim_move.setStartValue(self.container.geometry())
+        anim_move.setEndValue(self.container.geometry().translated(0, 50))
+        anim_move.setEasingCurve(QEasingCurve.InQuad)
+        
+        self.anim_group_close = QParallelAnimationGroup()
+        self.anim_group_close.addAnimation(self.anim_close)
+        self.anim_group_close.addAnimation(anim_move)
+        
+        self.anim_group_close.finished.connect(self._on_closed)
+        self.anim_group_close.start()
         
     def _on_closed(self):
-        self.setGraphicsEffect(None)
         self.close()
         self.closed.emit()
 

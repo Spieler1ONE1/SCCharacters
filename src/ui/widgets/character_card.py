@@ -230,6 +230,7 @@ class CharacterCard(QFrame):
         
         self.setFixedSize(200, 320)
         self.setMouseTracking(True)
+        self.setAttribute(Qt.WA_Hover) # Ensure hover events are generated reliably
         self.setCursor(Qt.PointingHandCursor)
         self.setObjectName("CharacterCard")
         
@@ -374,8 +375,16 @@ class CharacterCard(QFrame):
             self.image_label.set_transform_params(self._current_zoom, self._current_tilt)
             
     def enterEvent(self, event):
+        # Force Mouse Tracking on entry to ensure we catch moves
+        self.setMouseTracking(True)
+        
+        # Capture instant mouse position so the first frame isn't empty/stale
+        from PySide6.QtGui import QCursor
+        self._mouse_pos = self.mapFromGlobal(QCursor.pos())
+        
         if self.sound_manager:
             self.sound_manager.play_card_hover()
+            
         self.zoom_anim.stop()
         self.zoom_anim.setStartValue(self._current_zoom)
         self.zoom_anim.setEndValue(1.1)
@@ -385,6 +394,7 @@ class CharacterCard(QFrame):
         self.scan_anim.stop()
         self.scan_anim.start()
         
+        self.update() # Force repaint
         super().enterEvent(event)
 
     def leaveEvent(self, event):
@@ -394,14 +404,14 @@ class CharacterCard(QFrame):
         self.zoom_anim.start()
         
         self._current_tilt = QPointF(0, 0)
+        self._mouse_pos = None # Clear mouse pos
+        
         if hasattr(self, 'image_label'):
              self.image_label.set_transform_params(self._current_zoom, self._current_tilt)
              
-        # Reset scanner
-        # self.scan_anim.stop() 
-        # Optional: Let it finish or reset?
         self.image_label.set_scan_pos(-1.0) # Hide immediately
         
+        self.update()
         super().leaveEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -439,8 +449,8 @@ class CharacterCard(QFrame):
         if not hasattr(self, '_mouse_pos') or self._mouse_pos is None:
             return
             
-        # Only draw holo effect if mouse is inside (or recently inside)
-        if not self.underMouse():
+        # RELAXED CHECK: Trust our local tracking
+        if not self.rect().contains(self._mouse_pos):
             return
 
         painter = QPainter(self)
@@ -546,21 +556,24 @@ class CharacterCard(QFrame):
         self.btn_select.show()
         
         # Favorite (Top Right)
-        self.btn_fav = QPushButton("★", self.image_container)
+        self.btn_fav = QPushButton("♡", self.image_container)
         self.btn_fav.setFixedSize(32, 32)
         self.btn_fav.setCursor(Qt.PointingHandCursor)
+        self.btn_fav.setToolTip(translator.get("toggle_fav") or "Toggle Favorite")
+        # Default Style (Reset via set_favorite(False) usually, but setting initial here)
         self.btn_fav.setStyleSheet("""
             QPushButton {
                 background-color: rgba(0, 0, 0, 0.4);
-                color: rgba(255, 255, 255, 0.7);
+                color: rgba(255, 255, 255, 0.8);
                 border-radius: 16px;
-                border: none;
+                border: 1px solid rgba(255,255,255,0.3);
                 font-size: 18px;
                 padding-bottom: 2px;
             }
             QPushButton:hover {
                 background-color: rgba(244, 63, 94, 0.8);
                 color: white;
+                border-color: #f43f5e;
             }
         """)
         self.btn_fav.clicked.connect(self.toggle_fav)
@@ -792,39 +805,46 @@ class CharacterCard(QFrame):
 
     def set_favorite(self, is_fav: bool):
         if is_fav:
-             # Make it Gold (Star)
+             # Make it Red (Heart) with Glow
+             self.btn_fav.setText("♥")
              self.btn_fav.setStyleSheet("""
                 QPushButton {
-                    background-color: #f59e0b;
+                    background-color: #ef4444; /* Premium Red */
                     color: white;
                     border-radius: 16px;
-                    border: none;
-                    font-size: 20px;
-                    font-weight: bold;
-                    padding-bottom: 2px;
-                }
-             """)
-        else:
-             # Revert (Transparent Black)
-             self.btn_fav.setStyleSheet("""
-                QPushButton {
-                    background-color: rgba(0, 0, 0, 0.4);
-                    color: rgba(255, 255, 255, 0.6);
-                    border-radius: 16px;
-                    border: none;
-                    font-size: 20px;
-                    font-weight: bold;
+                    border: 2px solid #fee2e2;
+                    font-size: 18px;
                     padding-bottom: 2px;
                 }
                 QPushButton:hover {
-                    background-color: #fbbf24;
+                    background-color: #dc2626;
+                }
+             """)
+        else:
+             # Make it Hollow/Glassy
+             self.btn_fav.setText("♡")
+             self.btn_fav.setStyleSheet("""
+                QPushButton {
+                    background-color: rgba(0, 0, 0, 0.4);
+                    color: rgba(255, 255, 255, 0.8);
+                    border-radius: 16px;
+                    border: 1px solid rgba(255,255,255,0.3);
+                    font-size: 18px;
+                    padding-bottom: 2px;
+                }
+                QPushButton:hover {
+                    background-color: rgba(244, 63, 94, 0.8);
                     color: white;
+                    border-color: #f43f5e;
                 }
              """)
 
     def toggle_fav(self):
-        # Check current state based on stylesheet (simple check)
-        is_fav = "background-color: #f59e0b" in self.btn_fav.styleSheet()
+        # Check current state based on stylesheet or character if tracked?
+        # Checking stylesheet string is brittle, but sufficient for UI toggle if not synced yet.
+        # Ideally, we should track state on the widget or check model.
+        # But `set_favorite` updates UI, so let's rely on internal check if possible.
+        is_fav = "background-color: #ef4444" in self.btn_fav.styleSheet()
         new_state = not is_fav
         
         self.set_favorite(new_state)

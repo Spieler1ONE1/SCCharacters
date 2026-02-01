@@ -16,7 +16,9 @@ class Downloader:
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
         from src.core.stream_integration import StreamIntegration
+        from src.core.backup_manager import BackupManager
         self.stream_integration = StreamIntegration(config_manager)
+        self.backup_manager = BackupManager(config_manager)
         
     def install_character(self, character: Character) -> bool:
         """
@@ -57,6 +59,10 @@ class Downloader:
             if self._download_file(character.download_url, temp_path):
                 # Validate file (e.g. check if not empty)
                 if os.path.getsize(temp_path) > 0:
+                    # Time Capsule: Backup if target exists
+                    if os.path.exists(final_path):
+                        self.backup_manager.create_snapshot(final_path, reason="Pre-Update")
+                        
                     os.replace(temp_path, final_path)
                     
                     # Save metadata

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                                QPushButton, QLabel, QLineEdit, QScrollArea, QMessageBox, QTabWidget, QComboBox, QToolBar, QSizePolicy, QFrame, QApplication)
 from PySide6.QtCore import Qt, QSize, QPoint, QRect, QThreadPool, QRunnable, Signal, QObject, Slot, QTimer, QUrl, QEvent, QSequentialAnimationGroup, QParallelAnimationGroup
-from PySide6.QtGui import QPixmap, QDesktopServices, QAction, QIcon, QDragEnterEvent, QDropEvent, QPainter, QColor, QPen, QImage, QRadialGradient, QBrush
+from PySide6.QtGui import QPixmap, QDesktopServices, QAction, QIcon, QDragEnterEvent, QDropEvent, QPainter, QColor, QPen, QImage, QRadialGradient, QBrush, QCursor, QMouseEvent
 import webbrowser
 import os
 import shutil
@@ -109,13 +109,79 @@ class MainWindow(FramelessWindow):
         # 3. Recargar Datos (Background)
         self.initial_load()
 
+    def resizeEvent(self, event):
+        # Trigger hover refresh on resize (especially effective for maximize/restore)
+        QTimer.singleShot(0, self._force_hover_update)
+        QTimer.singleShot(100, self._force_hover_update) # Double tap for safety
+        super().resizeEvent(event)
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.WindowStateChange:
+            # Force update of hover states when maximizing/restoring via titlebar
+            QTimer.singleShot(0, self._force_hover_update)
+            QTimer.singleShot(50, self._force_hover_update)
+            
+        super().changeEvent(event)
+
+    def _force_hover_update(self):
+        """
+        Forces a refresh of the hover state for the widget under the mouse.
+        This fixes the issue where hover animations freeze after maximizing via titlebar.
+        """
+        # 1. Process pending events (update_idletasks)
+        QApplication.processEvents()
+        
+        # 2. Ensure window is active and has focus (critical for hover events)
+        self.activateWindow()
+        self.raise_()
+        
+        # 3. Get global mouse position
+        global_pos = QCursor.pos()
+        
+        # 4. FIRST PASS: Generic Widget Wake-up
+        widget = QApplication.widgetAt(global_pos)
+        if widget:
+            local_pos = widget.mapFromGlobal(global_pos)
+            event = QMouseEvent(QEvent.MouseMove, local_pos, global_pos, Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+            QApplication.sendEvent(widget, event)
+
+        # 5. SPECIFIC PASS: Fix Character Cards (The main victim)
+        # Iterate all cards to ensure their internal state matches reality
+        cards = self.findChildren(CharacterCard)
+        for card in cards:
+            if not card.isVisible(): continue
+            
+            local_pos = card.mapFromGlobal(global_pos)
+            is_inside = card.rect().contains(local_pos)
+            
+            # Reset/Force tracking
+            if not card.hasMouseTracking():
+                card.setMouseTracking(True)
+                
+            if is_inside:
+                # Force "Enter/Move" logic
+                card.setAttribute(Qt.WA_UnderMouse, True)
+                
+                # Send synthetic move to trigger 'mouseMoveEvent' which updates '_mouse_pos'
+                evt = QMouseEvent(QEvent.MouseMove, local_pos, global_pos, Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+                QApplication.sendEvent(card, evt)
+                
+                # Force repaint
+                card.update()
+            else:
+                # If card THINKS it's under mouse but isn't, force Leave
+                if card.testAttribute(Qt.WA_UnderMouse):
+                    card.setAttribute(Qt.WA_UnderMouse, False)
+                    evt = QEvent(QEvent.Leave)
+                    QApplication.sendEvent(card, evt)
+                    card.update()
+
     def center_on_screen(self):
         screen = QApplication.primaryScreen().availableGeometry()
         size = self.geometry()
-        # Center horizontally, but move it up vertically (subtract 100px)
-        # to ensure it doesn't feel "too low"
         x = (screen.width() - size.width()) // 2
-        y = max(0, ((screen.height() - size.height()) // 2) - 100)
+        # Raise it up significantly (-200px) as requested
+        y = max(0, ((screen.height() - size.height()) // 2) - 200)
         self.move(x, y)
         
         # Core components
@@ -191,7 +257,12 @@ class MainWindow(FramelessWindow):
 
         # --- Controllers ---
         self.navigation = NavigationController(self)
-        self.installation_controller = InstallationController(self.character_service, self)
+        self.installation_controller = InstallationController(self.character_service, self.downloader, self.threadpool, self)
+        
+        # Connect Controller Signals
+        self.installation_controller.install_started.connect(lambda msg: self.status_label.setText(msg))
+        self.installation_controller.install_finished.connect(self._on_controller_install_finished)
+        self.installation_controller.uninstall_finished.connect(self._on_controller_uninstall_finished)
         
         # Automation Service
         self.automation_service = AutomationService(self.config_manager, self.character_service)
@@ -216,6 +287,10 @@ class MainWindow(FramelessWindow):
         # Reset Status Bar to prevent accumulation of widgets
         self.setStatusBar(None)
             
+        # Re-apply language explicitely from config to ensure persistence
+        lang = self.config_manager.config.get("language", "es")
+        translator.set_language(lang)
+
         self.build_ui_content()
         self.apply_styles()
         # Ensure splash is on top
@@ -289,11 +364,16 @@ class MainWindow(FramelessWindow):
         # --- Toolbar ---
         self.create_toolbar(content_layout)
         
-        # --- Tabs ---
+        # Tabs
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True) # Cleaner look
         
-        # Online Tab
+        # 0. News Tab (Comms)
+        from src.ui.tabs.news_tab import NewsTab
+        self.news_tab = NewsTab(self.image_loader, self.threadpool, self)
+        self.tabs.addTab(self.news_tab, "Comms Link")
+        
+        # 1. Online Tab
         self.online_tab = OnlineTab(self.config_manager, self.theme_manager, 
                                     self.scraper, self.image_loader, 
                                     self.sound_manager,
@@ -344,23 +424,24 @@ class MainWindow(FramelessWindow):
         """Unified tab change handler."""
         # Notify Controller
         if hasattr(self, 'navigation'):
-             # We could delegate this entirely to navigation, but for now we sync logic here
              pass
 
         tab_name = self.tabs.tabText(index)
         
         # Logic from original on_tab_changed (Discord)
-        if index == 0: # Online
+        if index == 0: # News
+             self.discord_manager.update_presence("checking_comms", "Reading RSI News")
+        elif index == 1: # Online
             self.discord_manager.update_presence("Browsing Online Characters", "Looking for a new face")
-        elif index == 1: # Create
+        elif index == 2: # Create
             self.discord_manager.update_presence("Creating Character", "Using StarChar.app")
-        elif index == 2: # Installed
+        elif index == 3: # Installed
             # Logic from duplicate on_tab_changed (Load Data)
             self.installed_tab.load_characters()
             
             count = len(self.installed_character_widgets)
             self.discord_manager.update_presence("Managing Fleet", f"{count} Characters Installed")
-        elif index == 3: # About
+        elif index == 4: # About
             self.discord_manager.update_presence("Checking Credits", "Admiring the work")
 
     def closeEvent(self, event):
@@ -390,9 +471,6 @@ class MainWindow(FramelessWindow):
         super().closeEvent(event)
         event.accept()
         
-
-
-    
     def setup_ui(self):
         # Legacy stub for compatibility if needed, but redirects to split methods
         self.setup_window_base()
@@ -720,12 +798,15 @@ class MainWindow(FramelessWindow):
             self.on_install_error(str(e))
 
     def install_character(self, character):
-        self.status_label.setText(self.tr("downloading"))
-        
-        worker = InstallWorker(self.downloader, character)
-        worker.signals.result.connect(self.on_install_success)
-        worker.signals.error.connect(self.on_install_error)
-        self.threadpool.start(worker)
+        self.installation_controller.install_character(character)
+
+    def _on_controller_install_finished(self, success, result):
+        if success:
+            # result is the character object
+            self.on_install_success([result])
+        else:
+            # result is error message
+            self.on_install_error(result)
 
 
     def on_install_success(self, result):
@@ -768,21 +849,18 @@ class MainWindow(FramelessWindow):
                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                                    
         if reply == QMessageBox.Yes:
-            try:
-                success = self.character_service.uninstall_character(character)
-                
-                if success:
-                    self.show_toast(self.tr("toast_uninstalled"), self.tr("uninstalled_msg", name=character.name))
-                    self.installed_tab.load_characters() # Refresh list
-                    
-                    # Update Online Tab
-                    if hasattr(self, 'online_tab'):
-                        self.online_tab.on_character_uninstalled(character)
-                else:
-                    QMessageBox.warning(self, self.tr("error"), self.tr("error_file_missing"))
-                    
-            except Exception as e:
-                QMessageBox.critical(self, self.tr("error"), f"Error:\n{str(e)}")
+            self.installation_controller.uninstall_character(character)
+
+    def _on_controller_uninstall_finished(self, success, message):
+        if success:
+             self.show_toast(self.tr("toast_uninstalled"), message)
+             self.load_installed_characters()
+             # We need to notify online tab too, but message doesn't carry the character object easily in this simplified signal.
+             # Ideally we pass the ID back. For now, a full refresh or simple toast is okay.
+             # To keep UI in sync, we can just trigger a general refresh or use the existing signals if we preserved the character ref.
+             # Actually, let's just refresh installed tab which triggers 'model_updated' -> online tab sync.
+        else:
+            QMessageBox.warning(self, self.tr("error"), message)
 
     def uninstall_multiple_characters(self, characters):
         # Already confirmed in InstalledTab
@@ -897,9 +975,31 @@ class MainWindow(FramelessWindow):
             self.show_toast(self.tr("filter_placeholder"), f"Filtering by: {tag}")
 
     def show_character_detail(self, character):
-        # We must keep a reference to avoid key error if non-blocking
-        if hasattr(self, 'detail_modal') and self.detail_modal and self.detail_modal.isVisible():
-             self.detail_modal.close()
+        # Check if we already have a modal open for this character
+        if hasattr(self, 'detail_modal') and self.detail_modal:
+            # If it's the same character, just bring to front
+            # Check safely
+            try:
+                if hasattr(self.detail_modal, 'character') and self.detail_modal.character.name == character.name:
+                    self.detail_modal.show()
+                    self.detail_modal.raise_()
+                    self.detail_modal.activateWindow()
+                    return
+            except RuntimeError:
+                # Object deleted
+                self.detail_modal = None
+
+            # If it's a different character, close the old one properly
+            if self.detail_modal:
+                 # Disconnect signals to avoid reference clearing issues
+                 try:
+                     self.detail_modal.closed.disconnect()
+                 except:
+                     pass
+                     
+                 if self.detail_modal.isVisible():
+                     self.detail_modal.close()
+                 self.detail_modal.deleteLater()
              
         # Instantiate as child widget
         self.detail_modal = CharacterDetailModal(character, self.image_loader, self)

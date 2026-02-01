@@ -1,51 +1,57 @@
-from PySide6.QtCore import QObject, Signal, QThread
-import os
-import shutil
+from PySide6.QtCore import QObject, Signal
+from src.core.workers import InstallWorker
 
 class InstallationController(QObject):
     """
     Controlador encargado de la lógica de instalación y desinstalación de personajes.
     Separa la lógica de negocio de la UI.
     """
-    install_finished = Signal(bool, str) # success, message
-    uninstall_finished = Signal(bool, str)
+    install_started = Signal(str) # message
+    install_finished = Signal(bool, object) # success, character/error_msg
+    uninstall_finished = Signal(bool, str) # success, message
 
-    def __init__(self, character_service, parent=None):
+    def __init__(self, character_service, downloader, threadpool, parent=None):
         super().__init__(parent)
         self._character_service = character_service
+        self._downloader = downloader
+        self._threadpool = threadpool
 
-    def install_character(self, character_data, game_path):
+    def install_character(self, character):
         """
         Orquesta la instalación de un personaje.
         """
-        if not character_data or not game_path:
+        if not character:
             self.install_finished.emit(False, "Datos inválidos para instalación.")
             return
 
-        # Aquí iría la lógica que antes estaba en MainWindow o workers
-        # Por simplicidad en este paso inicial, delegamos al servicio directamente
-        # o preparamos el worker.
+        self.install_started.emit("Iniciando descarga e instalación...")
         
-        # Nota: En una refactorización completa, moveríamos la creación del worker aquí
-        # o llamaríamos al servicio si es bloqueante (aunque debería ser async).
-        
-        try:
-            # Lógica simulada de servicio (en realidad debería usar Workers como antes)
-            # self._character_service.install(...) 
-            # Por ahora emitimos éxito para probar el flujo si se llamara
-            pass 
-        except Exception as e:
-            self.install_finished.emit(False, str(e))
+        # Crear y ejecutar Worker
+        worker = InstallWorker(self._downloader, character)
+        worker.signals.result.connect(self._on_install_success)
+        worker.signals.error.connect(self._on_install_error)
+        self._threadpool.start(worker)
 
-    def uninstall_character(self, character_path):
+    def _on_install_success(self, result):
+        # Result es una lista [character] según el worker original
+        # Emitimos éxito con el objeto personaje
+        if result and len(result) > 0:
+            self.install_finished.emit(True, result[0])
+        else:
+            self.install_finished.emit(True, None) # Should not happen usually
+
+    def _on_install_error(self, error_msg):
+        self.install_finished.emit(False, str(error_msg))
+
+    def uninstall_character(self, character):
         """
-        Maneja la desinstalación.
+        Maneja la desinstalación usando el servicio.
         """
         try:
-            if os.path.exists(character_path):
-                shutil.rmtree(character_path)
-                self.uninstall_finished.emit(True, "Personaje eliminado correctamente.")
+            success = self._character_service.uninstall_character(character)
+            if success:
+                self.uninstall_finished.emit(True, f"Personaje '{character.name}' eliminado correctamente.")
             else:
-                self.uninstall_finished.emit(False, "El directorio no existe.")
+                self.uninstall_finished.emit(False, "No se pudo eliminar el archivo o no existe.")
         except Exception as e:
-            self.uninstall_finished.emit(False, f"Error al eliminar: {e}")
+            self.uninstall_finished.emit(False, f"Error al eliminar: {str(e)}")

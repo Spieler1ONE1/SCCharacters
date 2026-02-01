@@ -63,6 +63,7 @@ class ScraperWorker(BaseWorker):
                 pages = range(self.start_page, self.start_page + self.pages_to_fetch)
                 results_map = {}
                 
+                # OPTIMIZATION: Max 10 concurrent requests to respect server but speed up
                 with ThreadPoolExecutor(max_workers=min(10, self.pages_to_fetch)) as executor:
                     future_to_page = {
                         executor.submit(self.scraper.get_character_list, page=p, search_query=self.search_query): p 
@@ -77,7 +78,8 @@ class ScraperWorker(BaseWorker):
                             if chars:
                                 results_map[page] = chars
                             completed_count += 1
-                            self.signals.progress.emit(f"Fetched page {completed_count}/{self.pages_to_fetch}")
+                            # Optional: Emit partial progress
+                            # self.signals.progress.emit(f"Fetched page {completed_count}/{self.pages_to_fetch}")
                         except Exception as e:
                             logger.error(f"Error fetching page {page}: {e}")
                 
@@ -250,8 +252,9 @@ class InstalledCharactersWorker(BaseWorker):
             # Use ThreadPoolExecutor to process files in parallel
             from concurrent.futures import ThreadPoolExecutor, as_completed
             
-            # Limit workers to avoid spamming the API too hard (e.g. 5 concurrent requests)
-            max_workers = 5
+            # Limit workers to avoid spamming the API too hard but speed up local reads
+            # PERFORMANCE: Increased to 10 for SSD optimization
+            max_workers = 10
             
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 # Submit all tasks

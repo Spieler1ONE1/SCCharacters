@@ -78,7 +78,7 @@ class ImageLoaderTask(QRunnable):
 class ImageLoader:
     def __init__(self):
         self.threadpool = QThreadPool()
-        # Increased thread count safely now that we reuse connections
+        # PERFORMANCE: Increased to 8 concurrent downloads for rapid grid loading
         self.threadpool.setMaxThreadCount(8) 
         
         # Use standard cache location
