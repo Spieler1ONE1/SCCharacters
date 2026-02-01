@@ -8,7 +8,7 @@ from src.core.workers import InstalledCharactersWorker
 from src.ui.widgets import CharacterCard
 from src.ui.anim_config import AnimConfig
 import os
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtCore import QUrl, QTimer
 from src.ui.widgets.skeleton import SkeletonCard
 
