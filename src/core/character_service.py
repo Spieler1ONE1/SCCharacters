@@ -102,8 +102,8 @@ class CharacterService:
                 
                 return True
             else:
-                logger.warning(f"File to uninstall not found: {file_path}")
-                return False 
+                logger.info(f"File to uninstall not found (already removed): {file_path}")
+                return True 
                 
         except Exception as e:
             logger.error(f"Error uninstalling character {character.name}: {e}")
