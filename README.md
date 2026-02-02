@@ -43,13 +43,9 @@
 
 **BioMetrics** is updated regularly to support the latest Star Citizen patches.
 
-| Star Citizen Patch | BioMetrics Version | Status |
-| :--- | :--- | :--- |
-| **Alpha 3.24+** | v2.0.0+ | ✅ Fully Supported |
-| **Alpha 3.23** | v1.5.0 | ⚠️ Partial Support |
-| **Alpha 3.18 - 3.22** | Legacy | ❌ Deprecated |
+✅ **Fully Compatible with the Latest Star Citizen Version**
 
-*Compatible with LIVE, PTU, and EPTU environments.*
+*Compatible with LIVE, PTU, EPTU and EVO environments.*
 
 ### Installation
 
