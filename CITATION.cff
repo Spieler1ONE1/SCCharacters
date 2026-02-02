@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: "SCCharacters - BioMetrics System"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - given-names: "SpielerWAN"
+    family-names: ""
+    email: "contact@spielerwan.com"
+repository-code: "https://github.com/Spieler1ONE1/SCCharacters"
+url: "https://github.com/Spieler1ONE1/SCCharacters"
+abstract: "An advanced desktop application for managing, installing, and customizing Star Citizen character appearances (.chf files). Features include DNA preset management, backup/restore, and community sharing integration."
+keywords:
+  - "star citizen"
+  - "character customization"
+  - "game utility"
+  - "python"
+  - "pyside6"
+  - "biometrics"
+  - "chf file"
+  - "gaming tool"
+license: MIT
+version: 2.0.0
+date-released: 2024-05-20

@@ -1,18 +1,22 @@
-# 🧬 BioMetrics System & Manager
-> *Advanced Character Identity Management for Star Citizen*
+<div align="center">
+  <img src="assets/logo.png" alt="Star Citizen Character Manager Logo" width="200">
+  <h1>🧬 BioMetrics - Star Citizen Character Manager</h1>
+  <h3><i>The Ultimate Character Customization & DNA Preset Tool for Star Citizen</i></h3>
+  <br>
+  
+  ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/TGjCmzHR)
+</div>
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/TGjCmzHR)
-
-**SCCharacters (BioMetrics)** is a powerful, immersive desktop application designed to streamline the management, installation, and customization of your Star Citizen character appearances (`.chf` files). Built with a modern, sci-fi aesthetic that mirrors the in-game universe, this tool serves as your personal extensive biometric database.
+**SCCharacters (BioMetrics)** is a powerful, immersive desktop application designed to streamline the management, installation, and customization of your **Star Citizen character appearances** (`.chf` files). Whether you're looking to **import character presets**, backup your **Star Citizen DNA**, or share your avatar with the community, this tool serves as your personal extensive biometric database. It simplifies the process of changing your in-game appearance without manually editing files.
 
 ---
 
 ## 🖼️ Interface Gallery
 
 <div align="center">
-  <img src="assets/screenshots/dashboard.png" alt="Dashboard" width="800">
+  <img src="assets/screenshots/dashboard.png" alt="Star Citizen Character Manager Dashboard UI" width="800">
   <br><br>
-  <img src="assets/screenshots/splash_screen.png" alt="Splash Screen" width="400">
+  <img src="assets/screenshots/splash_screen.png" alt="BioMetrics Tool Splash Screen" width="400">
 </div>
 
 ---
@@ -32,6 +36,20 @@
 ### Prerequisites
 - Windows 10/11
 - Star Citizen installed (LIVE/PTU)
+
+
+
+## 🎮 Game Compatibility & Support
+
+**BioMetrics** is updated regularly to support the latest Star Citizen patches.
+
+| Star Citizen Patch | BioMetrics Version | Status |
+| :--- | :--- | :--- |
+| **Alpha 3.24+** | v2.0.0+ | ✅ Fully Supported |
+| **Alpha 3.23** | v1.5.0 | ⚠️ Partial Support |
+| **Alpha 3.18 - 3.22** | Legacy | ❌ Deprecated |
+
+*Compatible with LIVE, PTU, and EPTU environments.*
 
 ### Installation
 
@@ -56,6 +74,22 @@
    - Go to the **Online Tab** to browse and download.
    - Or drop your `.chf` files into the **Installed Tab**.
 3. **Apply to Game**: Once installed, the characters appear in your Star Citizen character customization menu under "Import Character".
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+### How do I install Star Citizen character presets?
+Simply download the **BioMetrics Manager**, browse the online repository tab, and click "Install" on any character you like. The tool handles the file placement automatically.
+
+### Where are Star Citizen character files located?
+Star Citizen stores character files in `StarCitizen\LIVE\user\client\0\CustomCharacters`. BioMetrics detects this path automatically so you don't have to find it yourself.
+
+### Can I share my Star Citizen character DNA?
+Yes! Use the **Backup** feature to export your character to a file, which you can then share with friends or the community.
+
+### Is this tool safe to use with Star Citizen?
+Yes, this tool only manages local `.chf` files (character presets) and does not modify game memory or executable files. It is compliant with the Star Citizen Fandom FAQ.
 
 ---
 

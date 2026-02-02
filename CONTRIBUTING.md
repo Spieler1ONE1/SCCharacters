@@ -4,6 +4,15 @@ First off, thanks for taking the time to contribute! 🎉
 
 The following is a set of guidelines for contributing to SCCharacters and its packages. These are mostly guidelines, not rules. Use your best judgment and feel free to propose changes to this document in a pull request.
 
+## Technology Stack
+
+This project is built using:
+- **Python 3.10+**: Core logic and backend.
+- **PySide6 (Qt for Python)**: Modern, responsive GUI framework.
+- **Star Citizen File Parsing**: Custom handlers for `.chf` and `.xml` configuration files.
+
+We welcome contributions from developers of all skill levels interested in **game tools development**, **GUI programming**, or **Star Citizen community projects**.
+
 ## Code of Conduct
 
 This project and everyone participating in it is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
