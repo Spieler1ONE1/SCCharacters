@@ -97,39 +97,7 @@ class SettingsDialog(QDialog):
         ptu_layout.addLayout(ptu_input_layout)
         layout.addLayout(ptu_layout)
         
-        # --- Stream Integration Section ---
-        stream_group = QFrame()
-        stream_group.setFrameShape(QFrame.StyledPanel)
-        stream_layout = QVBoxLayout(stream_group)
-        
-        self.chk_stream_enabled = QCheckBox("Enable Stream Integration (OBS Kit)")
-        self.chk_stream_enabled.setChecked(self.config_manager.get_obs_integration_enabled())
-        self.chk_stream_enabled.stateChanged.connect(self.toggle_stream_path)
-        stream_layout.addWidget(self.chk_stream_enabled)
-        
-        self.stream_path_container = QWidget()
-        self.stream_path_layout = QVBoxLayout(self.stream_path_container)
-        self.stream_path_layout.setContentsMargins(0, 5, 0, 0)
-        
-        lbl_stream = QLabel("Output Folder for Overlays (.txt/.jpg):")
-        self.stream_path_layout.addWidget(lbl_stream)
-        
-        stream_input_box = QHBoxLayout()
-        self.stream_path_input = QLineEdit()
-        self.stream_path_input.setText(self.config_manager.get_stream_output_path())
-        setup_localized_context_menu(self.stream_path_input)
-        
-        btn_browse_stream = QPushButton(self.tr("browse"))
-        btn_browse_stream.clicked.connect(self.browse_stream_path)
-        
-        stream_input_box.addWidget(self.stream_path_input)
-        stream_input_box.addWidget(btn_browse_stream)
-        
-        self.stream_path_layout.addLayout(stream_input_box)
-        stream_layout.addWidget(self.stream_path_container)
-        
-        layout.addWidget(stream_group)
-        self.toggle_stream_path(self.chk_stream_enabled.checkState())
+
         
         # --- Automation Section ---
         auto_group = QFrame()
@@ -202,14 +170,7 @@ class SettingsDialog(QDialog):
         if path:
             self.ptu_input.setText(path)
 
-    def browse_stream_path(self):
-        current = self.stream_path_input.text()
-        path = QFileDialog.getExistingDirectory(self, "Select Stream Output Folder", current)
-        if path:
-            self.stream_path_input.setText(path)
 
-    def toggle_stream_path(self, state):
-        self.stream_path_container.setVisible(bool(state))
 
     def toggle_cloud_path(self, state):
         self.cloud_path_container.setVisible(bool(state))
@@ -240,9 +201,7 @@ class SettingsDialog(QDialog):
         # Update via manager (also saves)
         self.theme_manager.set_theme_mode(selected_theme)
 
-        # Save Stream Settings
-        self.config_manager.set_obs_integration_enabled(self.chk_stream_enabled.isChecked())
-        self.config_manager.set_stream_output_path(self.stream_path_input.text())
+
         
         # Save Automation Settings
         self.config_manager.config["auto_backup_enabled"] = self.chk_auto_backup.isChecked()

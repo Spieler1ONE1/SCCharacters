@@ -176,30 +176,5 @@ class ConfigManager:
     def is_muted(self) -> bool:
         return not self.config.get("sound_enabled", True)
 
-    # --- Stream/OBS Integration ---
-    def get_obs_integration_enabled(self) -> bool:
-        return self.config.get("obs_integration_enabled", True)
 
-    def set_obs_integration_enabled(self, enabled: bool):
-        self.config["obs_integration_enabled"] = enabled
-        self.save_config()
-
-    def get_stream_output_path(self) -> str:
-        """Returns the path where stream info (txt/images) will be written."""
-        # Default to a folder named "StreamKit" in the Documents/BioMetrics or similar
-        # For simplicity, let's use a subdirectory of the main config dir or a specific Documents folder
-        # The user PROBABLY wants this accessible. 
-        # Let's use: User Documents/BioMetrics/StreamKit
-        # If not set in config, return default.
-        custom = self.config.get("stream_output_path")
-        if custom:
-            return custom
-            
-        docs = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
-        # Assuming app name used elsewhere is "BioMetrics" implicitly or checking if we can use a standard folder
-        return os.path.join(docs, "BioMetrics", "StreamKit")
-
-    def set_stream_output_path(self, path: str):
-        self.config["stream_output_path"] = path
-        self.save_config()
 

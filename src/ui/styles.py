@@ -259,6 +259,26 @@ def get_stylesheet(theme_mode: str) -> str:
         background-color: {c.error};
         color: #ffffff;
     }}
+
+    /* --- Launch Game Button --- */
+    QPushButton#ToolbarLaunchButton {{
+        background-color: {c.success};
+        border: 1px solid {c.success};
+        color: #ffffff;
+        padding: 6px 20px;
+        border-radius: 6px;
+        font-weight: 700;
+        min-width: 120px;
+    }}
+    QPushButton#ToolbarLaunchButton:hover {{
+        background-color: transparent;
+        color: {c.success};
+        border: 1px solid {c.success};
+    }}
+    QPushButton#ToolbarLaunchButton:pressed {{
+        background-color: {c.success};
+        color: white;
+    }}
     
     /* --- Inputs --- */
     QLineEdit, QComboBox {{
@@ -414,4 +434,54 @@ def get_stylesheet(theme_mode: str) -> str:
         font-weight: 400;
         color: {c.text_secondary}; 
     }}
+
+    /* --- Footer Bar --- */
+    QFrame#FooterBar {{
+        background-color: {c.bg_secondary};
+        border-top: 1px solid {c.border};
+    }}
+    
+    QLabel#FooterStatusLabel {{
+        font-size: 14px;
+        font-weight: 600;
+        color: {c.text_primary};
+    }}
+    
+    QLabel#FooterSubStatusLabel {{
+        font-size: 11px;
+        color: {c.text_secondary};
+        font-family: 'Consolas', monospace;
+    }}
+    
+    QLabel#FooterVersionLabel {{
+        font-size: 12px;
+        color: {c.text_disabled};
+        padding-right: 15px;
+    }}
+    
+    /* --- BIG LAUNCH BUTTON --- */
+    QPushButton#FooterLaunchButton {{
+        background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {c.success}, stop:1 {c.accent});
+        border: 1px solid {c.success};
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 800;
+        border-radius: 4px;
+        padding: 10px 40px;
+        min-width: 180px;
+        letter-spacing: 1px;
+    }}
+    
+    QPushButton#FooterLaunchButton:hover {{
+        background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {c.success}, stop:1 #ffffff);
+        color: {c.bg_primary};
+        border-color: #ffffff;
+    }}
+    
+    QPushButton#FooterLaunchButton:pressed {{
+        background-color: {c.success};
+        color: white;
+        margin-top: 2px;
+    }}
+
     """

@@ -985,12 +985,14 @@ TRANSLATIONS = {
         "end_of_transmissions": "--- Fim das Transmissões ---",
         "news_date_unknown": "Data Desconhecida",
         "news_recent": "TRANSMISSÃO RECENTE",
-        "news_no_signal_image": "SEM SINAL"
+        "news_no_signal_image": "SEM SINAL",
+        "launch_game_btn": "🚀 INICIAR JOGO"
     },
     "it": {
         "window_title": "Sistema Automatico e Gestore BioMetrics",
         "tab_online": "Scarica (Online)",
         "tab_installed": "Installati (Locale)",
+        "launch_game_btn": "🚀 AVVIA GIOCO",
         "changelog": "Registro Modifiche",
         "tab_create": "Crea Personaggio Personalizzato (Sperimentale) ⭐",
         "tab_credits": "Crediti",

@@ -1,6 +1,6 @@
 {
-    "latest_version": "2.0.0",
+    "latest_version": "2.2.0",
     "download_url": "https://github.com/Spieler1ONE1/SCCharacters/releases/latest/download/SCCharacters.exe",
-    "changelog": "- Nueva versión mayor con interfaz rediseñada y estabilidad mejorada.\n- Traducciones completas a múltiples idiomas (Español, Francés, Alemán, Portugués, Ruso, Chino, Japonés, Árabe).\n- Nuevas animaciones de transición de temas.\n- Backups más robustos y correcciones críticas en la instalación.",
+    "changelog": "- Nuevo diseño de pie de página (Footer Bar) con botón de lanzamiento integrado.\n- Botón 'Iniciar Juego' traducido a todos los idiomas soportados.\n- Mejoras visuales en la interfaz y corrección de errores de inicio.\n- Actualización de sistema de versiones.",
     "sha256": ""
 }

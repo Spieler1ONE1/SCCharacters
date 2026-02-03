@@ -43,6 +43,7 @@ from src.ui.tabs.create_tab import CreateTab
 from src.ui.components.activity_panel import ActivityPanel
 from src.core.automation_service import AutomationService
 from src.ui.tabs.changelog_tab import ChangelogTab
+from src.ui.components.footer_bar import FooterBar
 
 
 
@@ -345,23 +346,11 @@ class MainWindow(FramelessWindow):
         content_layout.setSpacing(20)
         main_layout.addWidget(content_widget)
         
-        # --- Status Bar ---
-        self.status_label = QLabel(self.tr("ready"))
-        self.statusBar().addWidget(self.status_label)
-        
-        # --- Activity Panel (Hidden by default/removed) ---
-        # User requested to hide it from bottom. 
-        # We keep the object instance because automation service logs to it and launch logic is there,
-        # but we don't add it to layout or we explicitly hide it.
-        # Actually, let's keep the logic but NOT add it to the view.
-        self.activity_panel = ActivityPanel(self)
-        self.activity_panel.hide() 
-        self.activity_panel.launch_requested.connect(self.launch_game)
-        
-        # Add to bottom of main layout, above statusbar
-        # main_layout.addWidget(self.activity_panel) # REMOVED per user request
-        
         # --- Toolbar ---
+        self.activity_panel = ActivityPanel(self)
+        self.activity_panel.hide()
+        # ActivityPanel is needed for logging signals even if not shown
+        
         self.create_toolbar(content_layout)
         
         # Tabs
@@ -383,7 +372,7 @@ class MainWindow(FramelessWindow):
         self.online_tab.install_clicked.connect(self.install_character)
         self.online_tab.delete_clicked.connect(self.uninstall_character)
         self.online_tab.toast_requested.connect(self.show_toast)
-        self.online_tab.status_updated.connect(self.status_label.setText)
+        # status_label connection moved to footer setup
         
         self.tabs.addTab(self.online_tab, self.tr("tab_online"))
         
@@ -397,16 +386,20 @@ class MainWindow(FramelessWindow):
         self.installed_tab.bulk_delete_clicked.connect(self.uninstall_multiple_characters)
         self.tabs.addTab(self.installed_tab, self.tr("tab_installed"))
 
-
-
         # Get version dynamically
         try:
-            with open(os.path.join(self.config_manager.base_path, "version.json"), "r") as f:
+            # First try path from config manager
+            version_file = os.path.join(self.config_manager.base_path, "version.json")
+            
+            # Fallback: if not found, try current directory
+            if not os.path.exists(version_file):
+                version_file = "version.json"
+                
+            with open(version_file, "r") as f:
                 ver_data = json.load(f)
-                current_ver = ver_data.get("latest_version", "1.0.0")
+                current_ver = ver_data.get("latest_version", "2.1.0")
         except Exception as e:
-             print(f"Error reading version.json: {e}")
-             current_ver = "1.0.0"
+             current_ver = "2.1.0"
 
         self.about_tab = AboutTab(current_version=current_ver)
         self.tabs.addTab(self.about_tab, self.tr("tab_credits"))
@@ -415,6 +408,22 @@ class MainWindow(FramelessWindow):
 
         content_layout.addWidget(self.tabs)
         
+        # --- Footer ---
+        self.footer = FooterBar(self)
+        self.footer.set_status(self.tr("ready"))
+        self.footer.set_version_text(f"V{current_ver}")
+        self.footer.set_launch_text(self.tr("launch_game_btn"))
+        self.footer.launch_clicked.connect(self.launch_game)
+        
+        # Map legacy status_label to footer's label so text updates work
+        self.status_label = self.footer.status_label 
+        
+        # Re-connect signals that used status label if needed
+        if hasattr(self, 'online_tab'):
+             self.online_tab.status_updated.connect(self.status_label.setText)
+
+        main_layout.addWidget(self.footer)
+
         # Config Menu
         self.setup_menu()
         
@@ -547,33 +556,14 @@ class MainWindow(FramelessWindow):
         
         toolbar_layout.addStretch()
         
-        btn_launch = QPushButton(self.tr("launch_game_btn"))
-        btn_launch.setObjectName("ToolbarLaunchButton")
-        btn_launch.setCursor(Qt.PointingHandCursor)
-        btn_launch.setStyleSheet("""
-            QPushButton {
-                background-color: rgba(34, 197, 94, 0.2); 
-                border: 1px solid rgba(34, 197, 94, 0.5); 
-                color: #4ade80; 
-                padding: 6px 15px; 
-                border-radius: 4px; 
-                font-weight: bold;
-                margin-right: 10px;
-            }
-            QPushButton:hover {
-                background-color: rgba(34, 197, 94, 0.4); 
-                border-color: #4ade80;
-            }
-        """)
-        btn_launch.clicked.connect(self.launch_game)
-        toolbar_layout.addWidget(btn_launch)
+        if parent_layout:
+            parent_layout.addWidget(self.toolbar_container)
 
 
         
         # toolbar_layout.addStretch() # Already added above before launch button
         
-        if parent_layout:
-            parent_layout.addWidget(self.toolbar_container)
+
             
 
 

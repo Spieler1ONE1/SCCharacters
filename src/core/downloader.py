@@ -15,9 +15,7 @@ class Downloader:
 
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
-        from src.core.stream_integration import StreamIntegration
         from src.core.backup_manager import BackupManager
-        self.stream_integration = StreamIntegration(config_manager)
         self.backup_manager = BackupManager(config_manager)
         
     def install_character(self, character: Character) -> bool:
@@ -42,8 +40,6 @@ class Downloader:
             character.status = "installed"
             character.local_filename = existing_filename
             
-            # Update Stream Info
-            self.stream_integration.update_stream_info(character)
             return True
                 
         try:
@@ -85,8 +81,7 @@ class Downloader:
                     character.local_filename = os.path.basename(final_path) # Store exact filename
                     logger.info(f"Successfully installed {character.name}")
                     
-                    # Update Stream Info
-                    self.stream_integration.update_stream_info(character)
+
                     
                     return True
                 else:
