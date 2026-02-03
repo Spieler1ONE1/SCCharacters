@@ -4,7 +4,7 @@
   <h3><i>The Ultimate Character Customization & DNA Preset Tool for Star Citizen</i></h3>
   <br>
   
-  ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/TGjCmzHR)
+  ![Version](https://img.shields.io/badge/version-2.2.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Star Citizen](https://img.shields.io/badge/Star%20Citizen-Ready-orange) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/TGjCmzHR)
 </div>
 
 **SCCharacters (BioMetrics)** is a powerful, immersive desktop application designed to streamline the management, installation, and customization of your **Star Citizen character appearances** (`.chf` files). Whether you're looking to **import character presets**, backup your **Star Citizen DNA**, or share your avatar with the community, this tool serves as your personal extensive biometric database. It simplifies the process of changing your in-game appearance without manually editing files.
@@ -50,8 +50,8 @@
 ### Installation
 
 <div align="center">
-  <a href="https://github.com/Spieler1ONE1/SCCharacters/releases/download/v2.0.0/SCCharacters.exe">
-    <img src="https://img.shields.io/badge/Download-SCCharacters_v2.0.0-2ea44f?style=for-the-badge&logo=windows&logoColor=white" alt="Download Now"/>
+  <a href="https://github.com/Spieler1ONE1/SCCharacters/releases/download/v2.2.0/SCCharacters.exe">
+    <img src="https://img.shields.io/badge/Download-SCCharacters_v2.2.0-2ea44f?style=for-the-badge&logo=windows&logoColor=white" alt="Download Now"/>
   </a>
 </div>
 
