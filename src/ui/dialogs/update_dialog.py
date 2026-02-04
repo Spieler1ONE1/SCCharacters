@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, QThread, Signal
 import os
 import subprocess
 import sys
+import tempfile
 
 from src.core.updater import UpdateManager
 from src.utils.translations import translator
@@ -125,12 +126,47 @@ class UpdateDialog(QDialog):
         
         if reply == QMessageBox.Yes:
             # Ejecutar el instalador y cerrar esta app
-            try:
-                # En Windows, startfile es útil para ejecutar ejecutables/instaladores
-                os.startfile(self.installer_path)
-                sys.exit(0)
-            except Exception as e:
-                QMessageBox.critical(self, self.tr("error"), self.tr("update_start_error", error=e))
+            # Determine if we are running as a frozen application (exe)
+            if getattr(sys, 'frozen', False):
+                current_exe = sys.executable
+                new_exe = self.installer_path
+                
+                # Create a batch script to handle the swap
+                # 1. Wait for current app to close
+                # 2. Overwrite current exe with new one
+                # 3. Restart the application
+                # 4. cleanup
+                batch_content = f"""
+@echo off
+timeout /t 3 /nobreak > NUL
+move /Y "{new_exe}" "{current_exe}"
+start "" "{current_exe}"
+del "%~f0"
+"""
+                try:
+                    fd, bat_path = tempfile.mkstemp(suffix=".bat", text=True)
+                    with os.fdopen(fd, 'w') as f:
+                        f.write(batch_content)
+                    
+                    # Launch the batch file without creating a window
+                    CREATE_NO_WINDOW = 0x08000000
+                    subprocess.Popen([bat_path], shell=True, creationflags=CREATE_NO_WINDOW)
+                    
+                    # Close the application
+                    sys.exit(0)
+                    
+                except Exception as e:
+                    QMessageBox.critical(self, self.tr("error"), f"Error preparing update: {e}")
+            else:
+                # Development mode / Source code
+                try:
+                    # Just launch the new exe to test it, but we can't overwrite source code
+                    QMessageBox.information(self, "Dev Mode", 
+                                          "Running from source. The downloaded EXE will be launched, but source code is not updated.")
+                    os.startfile(self.installer_path)
+                    sys.exit(0)
+                except Exception as e:
+                    QMessageBox.critical(self, self.tr("error"), self.tr("update_start_error", error=e))
         else:
             self.accept() # Cerrar diálogo pero seguir usando la app antigua temporalmente
 
