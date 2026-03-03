@@ -44,37 +44,7 @@ class SettingsDialog(QDialog):
         
         layout.addLayout(path_layout)
 
-        # --- Theme Section ---
-        theme_layout = QHBoxLayout()
-        theme_label = QLabel("Visual Theme:")
-        self.theme_combo = QComboBox()
-        
-        # Options
-        self.themes = [
-            ("BioMetrics Default (Dark)", "default"),
-            ("Drake Interplanetary (Industrial)", "drake"),
-            ("Origin Jumpworks (Luxury)", "origin"),
-            ("Aegis Dynamics (Military)", "aegis"),
-            ("Clean Light", "light"),
-            ("Auto (System)", "auto")
-        ]
-        
-        current_theme = self.config_manager.config.get("theme", "auto")
-        if current_theme == "dark": current_theme = "default" # normalizing
-        
-        for name, key in self.themes:
-            self.theme_combo.addItem(name, key)
-            
-        # Set current selection
-        index = self.theme_combo.findData(current_theme)
-        if index >= 0:
-            self.theme_combo.setCurrentIndex(index)
-        else:
-             self.theme_combo.setCurrentIndex(self.theme_combo.findData("auto"))
-             
-        theme_layout.addWidget(theme_label)
-        theme_layout.addWidget(self.theme_combo)
-        layout.addLayout(theme_layout)
+        # --- Theme Section removed ---
         
         # Custom PTU Path Section
         ptu_layout = QVBoxLayout()
@@ -196,10 +166,7 @@ class SettingsDialog(QDialog):
         # Save custom PTU path (no strict validation, just save)
         self.config_manager.set_custom_ptu_path(ptu_path)
 
-        # Save Theme
-        selected_theme = self.theme_combo.currentData()
-        # Update via manager (also saves)
-        self.theme_manager.set_theme_mode(selected_theme)
+
 
 
         
