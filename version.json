@@ -1,6 +1,6 @@
 {
-    "latest_version": "2.2.0",
+    "latest_version": "2.3.0",
     "download_url": "https://github.com/Spieler1ONE1/SCCharacters/releases/latest/download/SCCharacters.exe",
-    "changelog": "- Nuevo diseño de pie de página (Footer Bar) con botón de lanzamiento integrado.\n- Botón 'Iniciar Juego' traducido a todos los idiomas soportados.\n- Mejoras visuales en la interfaz y corrección de errores de inicio.\n- Actualización de sistema de versiones.",
+    "changelog": "- Server-side ordering and pagination for the Online tab.\\n- API integration for latest/oldest/like/download.\\n- Load more functionality now accurately tracks pages and API responses.\\n- Roulette fetches 5 random characters dynamically.\\n- Included new API integration documentation.",
     "sha256": ""
 }
