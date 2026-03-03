@@ -31,7 +31,7 @@ from src.ui.dialogs.update_dialog import UpdateDialog
 from src.ui.tabs.installed_tab import InstalledTab
 from src.ui.tabs.online_tab import OnlineTab
 from src.core.workers import (
-    InstallWorker, InstalledCharactersWorker, UpdateWorker
+    InstallWorker, InstalledCharactersWorker, UpdateWorker, RandomCharactersWorker
 )
 from src.core.character_service import CharacterService
 from src.ui.components.title_bar import TitleBar, CustomMenuBar
@@ -104,9 +104,7 @@ class MainWindow(FramelessWindow):
         # 2. Resetear Estado Interno
         self.stop_sync_flag = True
         self.is_loading = False
-        self.fully_synced = False
-        self.all_characters = []
-        
+
         # 3. Recargar Datos (Background)
         self.initial_load()
 
@@ -206,8 +204,6 @@ class MainWindow(FramelessWindow):
         
         # Global Event Filter Removed
         
-        self.all_characters = []
-        self.fully_synced = False
         self.character_widgets = []
         self.installed_character_widgets = []
         self.current_page = 1
@@ -600,33 +596,58 @@ class MainWindow(FramelessWindow):
         webbrowser.open("https://www.star-citizen-characters.com")
 
     def open_roulette(self):
-        # 1. Check if we have a full list
-        if hasattr(self, 'online_tab'):
-            if self.online_tab.fully_synced and self.online_tab.all_characters:
-                 self._show_roulette()
-            else:
-                 # Need to sync first
-                 self.show_toast(self.tr("loading"), "Gathering all known characters for the roulette...")
-                 try:
-                     self.online_tab.sync_finished.disconnect(self._on_roulette_sync_finished)
-                 except: pass # Ignore
-                 self.online_tab.sync_finished.connect(self._on_roulette_sync_finished)
-                 self.online_tab.sync_all_characters()
-        else:
+        if not hasattr(self, "scraper") or not hasattr(self, "threadpool"):
             self.show_toast(self.tr("error"), "Online module not active.")
+            return
+        self.show_toast(self.tr("loading"), "Fetching random characters...")
+        worker = RandomCharactersWorker(self.scraper, count=5)
+        worker.signals.result.connect(self._on_random_characters_for_roulette)
+        worker.signals.error.connect(self._on_roulette_random_error)
+        self.threadpool.start(worker)
 
-    def _on_roulette_sync_finished(self):
-        try:
-             self.online_tab.sync_finished.disconnect(self._on_roulette_sync_finished)
-        except: pass
-        self._show_roulette()
+    def _on_random_characters_for_roulette(self, candidates):
+        if not candidates:
+            self.show_toast(self.tr("error"), "No random characters received. Try again.")
+            return
+        self._show_roulette(candidates)
 
-    def _show_roulette(self):
-        candidates = self.online_tab.all_characters
-        dlg = RouletteDialog(candidates, self.image_loader, self.sound_manager, self)
-        dlg.character_selected.connect(self.install_character)
-        dlg.character_selected.connect(self.install_character)
-        dlg.exec()
+    def _on_roulette_random_error(self, error_msg):
+        self.show_toast(self.tr("error"), f"Could not load random characters: {error_msg}")
+
+    def _show_roulette(self, candidates):
+        self._roulette_dialog = RouletteDialog(candidates, self.image_loader, self.sound_manager, self)
+        self._roulette_dialog.character_selected.connect(self.install_character)
+        self._roulette_dialog.request_new_random.connect(self._on_roulette_request_new_random)
+        self._roulette_dialog.exec()
+        self._roulette_dialog = None
+
+    def _on_roulette_request_new_random(self):
+        if not getattr(self, "_roulette_dialog", None):
+            return
+        dlg = self._roulette_dialog
+        dlg.btn_spin_again.setEnabled(False)
+        dlg.btn_spin_again.setText(self.tr("loading"))
+        worker = RandomCharactersWorker(self.scraper, count=5)
+        worker.signals.result.connect(self._on_roulette_new_random_loaded)
+        worker.signals.error.connect(self._on_roulette_spin_again_error)
+        self.threadpool.start(worker)
+
+    def _on_roulette_new_random_loaded(self, characters):
+        dlg = getattr(self, "_roulette_dialog", None)
+        if not dlg:
+            return
+        if characters:
+            dlg.set_characters(characters)
+            dlg.start_spin()
+        dlg.btn_spin_again.setEnabled(True)
+        dlg.btn_spin_again.setText(translator.get("roulette_spin"))
+
+    def _on_roulette_spin_again_error(self, error_msg):
+        self.show_toast(self.tr("error"), error_msg)
+        dlg = getattr(self, "_roulette_dialog", None)
+        if dlg and hasattr(dlg, "btn_spin_again"):
+            dlg.btn_spin_again.setEnabled(True)
+            dlg.btn_spin_again.setText(translator.get("roulette_spin"))
 
     def open_mission_roulette(self):
         from src.ui.components.mission_roulette import MissionRouletteDialog
@@ -1085,9 +1106,6 @@ class MainWindow(FramelessWindow):
         
         # Tools Menu
         tools_menu = menubar.addMenu(self.tr("menu_tools"))
-        
-        sync_action = tools_menu.addAction(self.tr("menu_sync"))
-        sync_action.triggered.connect(lambda: self.online_tab.sync_all_characters())
         
         open_folder_action = tools_menu.addAction(self.tr("open_install_folder"))
         open_folder_action.triggered.connect(self.open_install_folder)

@@ -8,7 +8,8 @@ from src.ui.widgets.flow_layout import FlowLayout
 from src.ui.widgets import CharacterCard, setup_localized_context_menu
 from src.ui.widgets.skeleton import SkeletonCard
 from src.ui.anim_config import AnimConfig
-from src.core.workers import ScraperWorker, SyncAllWorker
+from src.core.workers import ScraperWorker
+from src.core.scraper import ORDER_BY_LATEST, ORDER_BY_OLDEST, ORDER_BY_LIKE, ORDER_BY_DOWNLOAD
 from src.utils.translations import translator
 from src.ui.styles import ThemeColors
 
@@ -22,7 +23,6 @@ class OnlineTab(QWidget):
     delete_clicked = Signal(object)
     toast_requested = Signal(str, str)
     status_updated = Signal(str)
-    sync_finished = Signal() # NEW: Sync finished signal
 
     def __init__(self, config_manager, theme_manager, scraper, image_loader, sound_manager, threadpool, parent=None):
         super().__init__(parent)
@@ -37,15 +37,16 @@ class OnlineTab(QWidget):
         self.all_characters = []
         self.display_candidates = []
         self.character_widgets = []
-        self.selected_characters = set() # NEW: Selected chars
-        self.installed_identifiers = set() # NEW: Installed Registry
+        self.selected_characters = set()
+        self.installed_identifiers = set()
         self.current_page = 1
+        self.last_fetched_api_page = 0  # last API page we received (1-based)
+        self.has_next_page = False
         self.is_loading = False
-        self.fully_synced = False
         self.pending_pages = 0
-        self.stop_sync_flag = False
-        self.sync_active = False
         self.PAGE_SIZE = 24
+        # Server-side order: sort_combo index 1=latest, 2=download, 3=like; 0=name (client-side only)
+        self.current_order_by = ORDER_BY_LATEST
         
         # Search Debounce
         self.search_timer = QTimer(self)
@@ -224,6 +225,23 @@ class OnlineTab(QWidget):
              if isinstance(widget, CharacterCard):
                 widget.update_theme(is_dark)
 
+    def _order_by_for_sort_index(self, sort_index: int, date_reverse: bool = False) -> str:
+        """
+        Maps sort_combo index to star-citizen-heads API orderBy param.
+        API: "latest" | "oldest" | "like" | "download". Name (A-Z) stays client-side only.
+        - 0 Name (A-Z): use "latest", then sort by name client-side.
+        - 1 Date: use "oldest" when date_reverse (Viejo-Nuevo), else "latest" (Nuevo-Viejo).
+        - 2 Most Downloaded: use "download".
+        - 3 Most Liked: use "like".
+        """
+        if sort_index == 2:
+            return ORDER_BY_DOWNLOAD
+        if sort_index == 3:
+            return ORDER_BY_LIKE
+        if sort_index == 1 and date_reverse:
+            return ORDER_BY_OLDEST
+        return ORDER_BY_LATEST
+
     def load_characters(self):
         if self.is_loading: return
         self.is_loading = True
@@ -233,69 +251,89 @@ class OnlineTab(QWidget):
         self.btn_reload.setEnabled(False)
         self.btn_load_more.hide()
         
-        # Reset
         self.current_page = 1
         self.all_characters = []
-        self.fully_synced = False
-        
+
         search_text = self.search_input.text().strip() or None
-        
-        # Determine pages to fetch
-        pages = 5 
-        self.pending_pages = 5
         sort_index = self.sort_combo.currentIndex()
+        self.current_order_by = self._order_by_for_sort_index(sort_index, self.date_reverse)
         
+        pages = 5
+        self.pending_pages = 5
         if search_text:
             pages = 1
             self.pending_pages = 1
-        elif sort_index in [2, 3]: # Popularity sorts need deep scan locally if not API supported
-            # Actually, standard scraper doesn't support server-side sort, so we need deep scan
-            pages = 20
-            self.pending_pages = 20
-            self.status_updated.emit(self.tr("deep_scan"))
+        # With server-side orderBy we no longer need a 20-page "deep scan" for popularity sorts
+        elif sort_index in [2, 3]:
+            pages = 5
+            self.pending_pages = 5
 
-        worker = ScraperWorker(self.scraper, start_page=1, pages_to_fetch=pages, search_query=search_text)
+        worker = ScraperWorker(
+            self.scraper,
+            start_page=1,
+            pages_to_fetch=pages,
+            search_query=search_text,
+            order_by=self.current_order_by,
+        )
         worker.signals.result.connect(self.on_characters_loaded)
         worker.signals.error.connect(self.on_load_error)
         worker.signals.progress.connect(self.status_updated.emit)
         self.threadpool.start(worker)
 
-    def on_characters_loaded(self, characters):
+    def on_characters_loaded(self, payload):
+        """payload: (characters, has_next_page) from API."""
+        if isinstance(payload, tuple) and len(payload) == 2:
+            characters, has_next_page = payload
+        else:
+            characters = payload if isinstance(payload, list) else []
+            has_next_page = True
         self.is_loading = False
         self.status_updated.emit(self.tr("ready"))
         self.btn_reload.setEnabled(True)
         self.all_characters = characters
-        
-        # Adjust current page
-        self.current_page = self.pending_pages if hasattr(self, 'pending_pages') else 1
-
-        self.populate_grid(characters, clear=True)
-        self.scroll_area.verticalScrollBar().setValue(0)
-        
+        self.has_next_page = has_next_page
+        self.last_fetched_api_page = self.pending_pages if hasattr(self, "pending_pages") else 1
         if characters:
-            self.btn_load_more.show()
-            self.btn_load_more.setText(self.tr("load_more"))
-            self.btn_load_more.setEnabled(True)
+            # Only apply client-side sort for Name (A-Z); server-side sorts already in API order
+            sort_index = self.sort_combo.currentIndex()
+            if sort_index == 0:
+                self._perform_local_sort(0)
+            else:
+                self.update_display_list()
+            if has_next_page:
+                self.btn_load_more.show()
+                self.btn_load_more.setText(self.tr("load_more"))
+                self.btn_load_more.setEnabled(True)
+            else:
+                self.btn_load_more.hide()
             QTimer.singleShot(100, self.check_scroll_bottom)
         else:
+            self.update_display_list()
             self.btn_load_more.hide()
             self.status_updated.emit(self.tr("no_chars_web"))
+        self.scroll_area.verticalScrollBar().setValue(0)
 
     def load_more_characters(self):
         if self.is_loading: return
         self.is_loading = True
         self.btn_load_more.setText(self.tr("loading"))
         
-        # Local Pagination
-        if self.fully_synced and self.display_candidates:
+        # Local pagination: we have more loaded than currently shown
+        if self.display_candidates and (self.current_page * self.PAGE_SIZE) < len(self.display_candidates):
             QTimer.singleShot(50, self._process_local_load_more)
             return
 
-        # Scraper Mode
-        next_page = self.current_page + 1
+        # Fetch next page from API (we may have several display batches from same API pages)
+        next_page = self.last_fetched_api_page + 1
+        self._pending_api_page = next_page
         search_text = self.search_input.text().strip() or None
-            
-        worker = ScraperWorker(self.scraper, start_page=next_page, pages_to_fetch=1, search_query=search_text)
+        worker = ScraperWorker(
+            self.scraper,
+            start_page=next_page,
+            pages_to_fetch=1,
+            search_query=search_text,
+            order_by=self.current_order_by,
+        )
         worker.signals.result.connect(self.on_more_characters_loaded)
         worker.signals.error.connect(self.on_load_error)
         self.threadpool.start(worker)
@@ -313,40 +351,45 @@ class OnlineTab(QWidget):
             self.btn_load_more.setEnabled(True)
         else:
             self.btn_load_more.hide()
-            
-        if (self.current_page * self.PAGE_SIZE) >= len(self.display_candidates):
+        # Hide "Load more" only when we've shown all loaded items and API has no next page
+        all_shown = (self.current_page * self.PAGE_SIZE) >= len(self.display_candidates)
+        if all_shown and not self.has_next_page:
             self.btn_load_more.hide()
+        elif all_shown and self.has_next_page:
+            self.btn_load_more.show()
+            self.btn_load_more.setEnabled(True)
+            self.btn_load_more.setText(self.tr("load_more"))
 
-    def on_more_characters_loaded(self, characters):
+    def on_more_characters_loaded(self, payload):
+        """payload: (characters, has_next_page) from API."""
+        if isinstance(payload, tuple) and len(payload) == 2:
+            characters, has_next_page = payload
+        else:
+            characters = payload if isinstance(payload, list) else []
+            has_next_page = False
         self.is_loading = False
         self.btn_load_more.setText(self.tr("load_more"))
         self.btn_load_more.setEnabled(True)
-        
+        self.has_next_page = has_next_page
+        self.last_fetched_api_page = getattr(self, "_pending_api_page", self.last_fetched_api_page + 1)
+
         if characters:
-            # Filter duplicates
             new_chars = []
-            existing_ids = {c.download_url for c in self.all_characters} 
+            existing_ids = {c.download_url for c in self.all_characters}
             for char in characters:
                 if char.download_url not in existing_ids:
                     new_chars.append(char)
                     existing_ids.add(char.download_url)
-            
+
             if new_chars:
                 scroll_bar = self.scroll_area.verticalScrollBar()
                 current_scroll = scroll_bar.value()
-                
-                self.current_page += 1
                 self.all_characters.extend(new_chars)
                 self.populate_grid(new_chars, clear=False)
                 self.status_updated.emit(self.tr("ready"))
-                
                 QTimer.singleShot(0, lambda: scroll_bar.setValue(current_scroll))
-            else:
-                 # Duplicate detection logic (skip forward)
-                 expected_page = max(1, len(self.all_characters) // 12)
-                 if self.current_page < expected_page:
-                    self.current_page = expected_page
-        else:
+
+        if not has_next_page:
             self.btn_load_more.setText(self.tr("no_more_chars"))
             self.btn_load_more.setEnabled(False)
 
@@ -467,78 +510,36 @@ class OnlineTab(QWidget):
             self.config_manager.remove_favorite(character.name)
         self.config_manager.save_config()
 
-    def sync_all_characters(self):
-        if getattr(self, 'sync_active', False):
-             self.stop_sync_flag = True
-             self.toast_requested.emit("Sync", "Stopping synchronization...")
-             return
-             
-        if self.is_loading: return
-        self.is_loading = True
-        self.sync_active = True
-        self.stop_sync_flag = False
-        
-        self.status_updated.emit(self.tr("sync_start"))
-        self.btn_reload.setEnabled(False)
-        self.toast_requested.emit("Sync_start", self.tr("sync_downloading"))
-        
-        self.show_skeletons()
-        
-        worker = SyncAllWorker(self.scraper, stop_check=lambda: self.stop_sync_flag)
-        worker.signals.result.connect(self.on_sync_finished)
-        worker.signals.error.connect(self.on_load_error)
-        worker.signals.progress.connect(self.status_updated.emit)
-        self.threadpool.start(worker)
-
-    def on_sync_finished(self, characters):
-        self.is_loading = False
-        self.sync_active = False
-        self.fully_synced = True
-        self.status_updated.emit(self.tr("ready"))
-        self.btn_reload.setEnabled(True)
-        
-        self.all_characters = characters
-
-        self.sort_online_characters(self.sort_combo.currentIndex())
-        
-        if characters:
-             msg = self.tr("sync_cancelled") if self.stop_sync_flag else self.tr("sync_success", count=len(characters))
-             self.toast_requested.emit("Success", msg)
-        
-        self.sync_finished.emit()
-
     def on_sort_activated(self, index):
-        # Specific logic for Date (index 1)
         if index == 1:
             if self.last_sort_index == 1:
-                # Toggle
                 self.date_reverse = not self.date_reverse
             else:
-                # Reset to default (New-Old)
                 self.date_reverse = False
-            
-            # Update text
             new_text = self.tr("sort_date_old") if self.date_reverse else self.tr("sort_date_new")
             self.sort_combo.setItemText(1, new_text)
+            self.current_order_by = self._order_by_for_sort_index(1, self.date_reverse)
         else:
-            # Reset date state if switching away? Optional, but good for consistency.
             self.date_reverse = False
             self.sort_combo.setItemText(1, self.tr("sort_date_new"))
+            self.current_order_by = self._order_by_for_sort_index(index, False)
 
         self.last_sort_index = index
         self.sort_online_characters(index)
 
     def sort_online_characters(self, index):
-        # Check if full sync needed
-        if not self.fully_synced:
-             if self.is_loading: return
-             self.sync_all_characters()
-             return
-
-        if not self.all_characters: return
-
+        if self.is_loading:
+            return
+        # Server-side sorts (Date, Most Downloaded, Most Liked): refetch so list matches website API order
+        if index in (1, 2, 3):
+            self.load_characters()
+            return
+        if not self.all_characters:
+            self.load_characters()
+            return
+        # Name A-Z: client-side sort only
         self.show_skeletons()
-        QTimer.singleShot(500, lambda: self._perform_local_sort(index))
+        QTimer.singleShot(500, lambda: self._perform_local_sort(0))
 
     def _perform_local_sort(self, index):
         if not self.all_characters: return
@@ -590,14 +591,7 @@ class OnlineTab(QWidget):
 
     def perform_search(self):
         self.search_timer.stop()
-        
-        # If fully synced, we just filter locally
-        if self.fully_synced:
-            self.update_display_list()
-        else:
-            # Trigger a fresh load from the scraper
-            # load_characters will pick up the text from search_input
-            self.load_characters()
+        self.load_characters()
 
     def show_skeletons(self):
         while self.flow_layout.count():

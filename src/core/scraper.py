@@ -2,11 +2,17 @@ import requests
 import logging
 import time
 import json
-from typing import List, Optional, Callable, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 from .models import Character
-from src.utils.translations import translator
 
 logger = logging.getLogger(__name__)
+
+# Must match star-citizen-heads API: GET /api/heads?orderBy=latest|like|download|oldest
+# (CharacterOrderBy type in app/api/db/character.ts)
+ORDER_BY_LATEST = "latest"   # newest first (createdAt desc)
+ORDER_BY_OLDEST = "oldest"   # oldest first (createdAt asc)
+ORDER_BY_LIKE = "like"       # most liked first
+ORDER_BY_DOWNLOAD = "download"  # most downloaded first
 
 class Scraper:
     BASE_URL = "https://www.star-citizen-characters.com"
@@ -20,38 +26,41 @@ class Scraper:
              "Accept": "application/json"
         })
 
-    def get_character_list(self, page: int = 1, search_query: str = None) -> List[Character]:
+    def get_character_list(
+        self,
+        page: int = 1,
+        search_query: Optional[str] = None,
+        order_by: Optional[str] = None,
+    ) -> Tuple[List[Character], bool]:
         """
-        Fetches the list of characters using the internal API.
+        Fetches a page of characters from the star-citizen-heads API.
+        Returns (characters, has_next_page) using body.hasNextPage from the API.
         """
         for attempt in range(self.MAX_RETRIES):
             try:
-                params = {"page": str(page)}
+                params: Dict[str, str] = {"page": str(page)}
                 if search_query:
                     params["search"] = search_query
+                if order_by:
+                    params["orderBy"] = order_by
 
                 url = f"{self.BASE_URL}/api/heads"
-                
-                logger.info(f"Fetching page {page} from {url}...")
-                
-                # Use session for connection pooling
                 response = self.session.get(url, params=params, timeout=10)
                 response.raise_for_status()
-                
                 data = response.json()
-                
-                # Check for body -> rows structure
-                if "body" in data and "rows" in data["body"]:
-                    rows = data["body"]["rows"]
-                    characters = []
-                    for item in rows:
-                         char = self._process_item(item)
-                         if char:
-                             characters.append(char)
-                    return characters
-                else:
+
+                if "body" not in data or "rows" not in data["body"]:
                     logger.warning(f"Unexpected JSON structure: {data.keys()}")
-                    return []
+                    return ([], False)
+
+                rows = data["body"]["rows"]
+                has_next = bool(data["body"].get("hasNextPage", False))
+                characters = []
+                for item in rows:
+                    char = self._process_item(item)
+                    if char:
+                        characters.append(char)
+                return (characters, has_next)
 
             except requests.RequestException as e:
                 logger.warning(f"Network error on attempt {attempt + 1}: {e}")
@@ -59,83 +68,44 @@ class Scraper:
                     time.sleep(self.RETRY_DELAY * (attempt + 1))
             except json.JSONDecodeError:
                 logger.error("Response was not JSON")
-                return []
+                return ([], False)
             except Exception as e:
                 logger.error(f"Unexpected error scraping page {page}: {e}")
+                return ([], False)
+        return ([], False)
+
+    def get_random_characters(self, count: int = 20) -> List[Character]:
+        """
+        Fetches random characters from the star-citizen-heads API (GET /api/heads/random?count=N).
+        Public endpoint, no auth. Used by the roulette.
+        """
+        count = max(2, min(50, count))
+        url = f"{self.BASE_URL}/api/heads/random"
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                response = self.session.get(url, params={"count": str(count)}, timeout=15)
+                response.raise_for_status()
+                data = response.json()
+                if not isinstance(data, list):
+                    logger.warning("Random API did not return a list")
+                    return []
+                characters = []
+                for item in data:
+                    char = self._process_item(item)
+                    if char:
+                        characters.append(char)
+                return characters
+            except requests.RequestException as e:
+                logger.warning(f"Random API attempt {attempt + 1}: {e}")
+                if attempt < self.MAX_RETRIES - 1:
+                    time.sleep(self.RETRY_DELAY * (attempt + 1))
+            except json.JSONDecodeError:
+                logger.error("Random API response was not JSON")
+                return []
+            except Exception as e:
+                logger.error(f"Random API error: {e}")
                 return []
         return []
-
-    def get_all_characters(self, callback=None, stop_check=None) -> List[Character]:
-        """
-        Fetches ALL characters using parallel requests for maximum speed.
-        """
-        import concurrent.futures
-        
-        all_characters = []
-        seen_urls = set()
-        
-        # Batch size for parallel requests
-        # Fetches 20 pages at a time, with 10 workers concurrently
-        # This should drastically speed up the sync
-        BATCH_SIZE = 20 
-        MAX_WORKERS = 10
-        current_page = 1
-        is_exhausted = False
-        
-        while not is_exhausted:
-            if stop_check and stop_check():
-                logger.info("Scraping cancelled by user.")
-                break
-                
-            if callback:
-                # Update UI with range
-                callback(translator.get('downloading_db_pages').format(start=current_page, end=current_page + BATCH_SIZE - 1))
-            
-            # Submit batch
-            futures_map = {}
-            with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-                for i in range(BATCH_SIZE):
-                    page_num = current_page + i
-                    futures_map[executor.submit(self.get_character_list, page=page_num)] = page_num
-                
-                # Collect results as they complete
-                results = {}
-                for future in concurrent.futures.as_completed(futures_map):
-                    if stop_check and stop_check():
-                        executor.shutdown(wait=False)
-                        return all_characters
-                        
-                    page_num = futures_map[future]
-                    try:
-                        chars = future.result()
-                        results[page_num] = chars
-                    except Exception as e:
-                        logger.error(f"Error fetching page {page_num}: {e}")
-                        results[page_num] = []
-
-            # Process in order to detect end of list correctly
-            # If page X is empty, we stop there.
-            for i in range(BATCH_SIZE):
-                page_num = current_page + i
-                chars = results.get(page_num, [])
-                
-                if not chars:
-                    is_exhausted = True
-                    break
-                
-                for char in chars:
-                    if char.download_url not in seen_urls:
-                        seen_urls.add(char.download_url)
-                        all_characters.append(char)
-            
-            if is_exhausted:
-                break
-                
-            current_page += BATCH_SIZE
-            # Minimal sleep to allow UI updates
-            time.sleep(0.05)
-            
-        return all_characters
 
     def _process_item(self, item: dict) -> Optional[Character]:
         try:
@@ -187,7 +157,7 @@ class Scraper:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     scraper = Scraper()
-    chars = scraper.get_character_list()
-    print(f"Found {len(chars)} characters.")
+    chars, has_next = scraper.get_character_list()
+    print(f"Found {len(chars)} characters, has_next={has_next}.")
     if chars:
         print(f"First: {chars[0]}")
