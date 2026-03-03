@@ -11,16 +11,8 @@ class ThemeManager(QObject):
         self._current_theme_mode = self.config_manager.config.get("theme", "auto") # auto, dark, light
         
     def get_effective_theme(self) -> str:
-        """Returns the effective theme name (e.g., 'default', 'light', 'drake', 'origin', 'aegis')."""
-        if self._current_theme_mode == "auto":
-            is_dark_system = darkdetect.isDark() if darkdetect else True
-            return "default" if is_dark_system else "light"
-        
-        # Backward compatibility for 'dark' -> 'default'
-        if self._current_theme_mode == "dark":
-            return "default"
-            
-        return self._current_theme_mode.lower()
+        """Returns the effective theme name (hardcoded to 'default' as requested)."""
+        return "default"
 
     def set_theme_mode(self, mode: str):
         """Sets the theme mode and saves config. Supports all theme keys."""

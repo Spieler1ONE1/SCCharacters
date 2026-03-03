@@ -1127,24 +1127,7 @@ class MainWindow(FramelessWindow):
             lang_group.addAction(action)
             lang_menu.addAction(action)
 
-        # View Menu (Theme)
-        view_menu = menubar.addMenu(self.tr("menu_view"))
-        theme_menu = view_menu.addMenu(self.tr("menu_theme"))
-        
-        theme_group = QActionGroup(self)
-        current_theme = self.config_manager.config.get("theme", "auto")
-        
-        for mode in ["Auto", "Dark", "Light"]:
-            mode_lower = mode.lower()
-            tr_key = f"theme_{mode_lower}"
-            display_text = translator.get(tr_key)
-            
-            action = QAction(display_text, self, checkable=True)
-            if mode_lower == current_theme:
-                action.setChecked(True)
-            action.triggered.connect(lambda checked, m=mode_lower: self.theme_manager.set_theme_mode(m))
-            theme_group.addAction(action)
-            theme_menu.addAction(action)
+
 
         # Help Menu
         help_menu = menubar.addMenu(self.tr("menu_help"))
