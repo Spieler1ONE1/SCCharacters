@@ -2,5 +2,5 @@
     "latest_version": "2.3.0",
     "download_url": "https://github.com/Spieler1ONE1/SCCharacters/releases/latest/download/SCCharacters.exe",
     "changelog": "- Server-side ordering and pagination for the Online tab.\\n- API integration for latest/oldest/like/download.\\n- Load more functionality now accurately tracks pages and API responses.\\n- Roulette fetches 5 random characters dynamically.\\n- Included new API integration documentation.",
-    "sha256": ""
+    "sha256": "5C8F9E1CB9C859E57E79506B3ABA495221ECD2417D84916910000077998D1BFAB"
 }
