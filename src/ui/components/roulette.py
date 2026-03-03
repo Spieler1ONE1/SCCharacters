@@ -39,7 +39,8 @@ class ScannerOverlay(QWidget):
         self.hide()
 
 class RouletteDialog(QDialog):
-    character_selected = Signal(object) 
+    character_selected = Signal(object)
+    request_new_random = Signal()
 
     def __init__(self, characters, image_loader, sound_manager, parent=None):
         super().__init__(parent)
@@ -321,7 +322,7 @@ class RouletteDialog(QDialog):
                 box-shadow: 0 0 15px #ff0055;
             }
         """)
-        self.btn_spin_again.clicked.connect(self.start_spin)
+        self.btn_spin_again.clicked.connect(self._on_spin_again_clicked)
         self.btn_spin_again.hide()
         inner_layout.addWidget(self.btn_spin_again)
         
@@ -341,26 +342,42 @@ class RouletteDialog(QDialog):
         self.btn_close.clicked.connect(self.close_animated)
         inner_layout.addWidget(self.btn_close)
 
+    def set_characters(self, characters):
+        """Replace the character list (e.g. after fetching 5 new random from API)."""
+        self.characters = [c for c in characters if c.image_url]
+
+    def _on_spin_again_clicked(self):
+        self.request_new_random.emit()
+
     def start_spin(self):
         if not self.characters:
             self.name_label.setText("NO DATA")
             return
-            
-        # Reset State
+
+        # Reset state
         self.spin_count = 0
         self.interval = 50
-        
+
         # Reset UI
         self.btn_install.hide()
         if hasattr(self, 'btn_spin_again'):
             self.btn_spin_again.hide()
-            
+
         self.scanner.show()
         self.scanner.start()
-            
+
+        # Show first character immediately so the dialog is never empty when animation starts
+        idx = random.randint(0, len(self.characters) - 1)
+        char = self.characters[idx]
+        self.selected_char = char
+        self.name_label.setText(char.name.upper())
+        self.image_loader.load_image(char.image_url, self.update_image)
+        c = random.choice(["#00f3ff", "#ff0055", "#ccff00", "#ffffff"])
+        self.image_display.setStyleSheet(f"border-radius: 125px; border: 3px dashed {c}; background-color: #000;")
+
         if hasattr(self, 'timer'):
             self.timer.stop()
-            
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.tick)
         self.timer.start(self.interval)

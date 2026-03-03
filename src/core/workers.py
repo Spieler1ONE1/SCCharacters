@@ -39,81 +39,88 @@ class BaseWorker(QRunnable):
 class ScraperWorker(BaseWorker):
     """
     Worker to fetch characters from the web via Scraper.
+    order_by: optional "latest", "like", or "download" — uses star-citizen-heads API server-side ordering.
     """
-    def __init__(self, scraper: Scraper, start_page: int = 1, pages_to_fetch: int = 1, search_query: Optional[str] = None):
+    def __init__(
+        self,
+        scraper: Scraper,
+        start_page: int = 1,
+        pages_to_fetch: int = 1,
+        search_query: Optional[str] = None,
+        order_by: Optional[str] = None,
+    ):
         super().__init__()
         self.scraper = scraper
         self.start_page = start_page
         self.pages_to_fetch = pages_to_fetch
         self.search_query = search_query
+        self.order_by = order_by
 
     @Slot()
     def run(self):
         try:
             if self.pages_to_fetch == 1:
-                # Simple sequential fetch (common case)
-                chars = self.scraper.get_character_list(page=self.start_page, search_query=self.search_query)
-                self.signals.result.emit(chars)
+                chars, has_next = self.scraper.get_character_list(
+                    page=self.start_page,
+                    search_query=self.search_query,
+                    order_by=self.order_by,
+                )
+                self.signals.result.emit((chars, has_next))
                 self.signals.finished.emit()
             else:
-                # Parallel fetch for bulk loading
                 from concurrent.futures import ThreadPoolExecutor, as_completed
-                
+
                 all_characters = []
                 pages = range(self.start_page, self.start_page + self.pages_to_fetch)
                 results_map = {}
-                
-                # OPTIMIZATION: Max 10 concurrent requests to respect server but speed up
+
                 with ThreadPoolExecutor(max_workers=min(10, self.pages_to_fetch)) as executor:
                     future_to_page = {
-                        executor.submit(self.scraper.get_character_list, page=p, search_query=self.search_query): p 
+                        executor.submit(
+                            self.scraper.get_character_list,
+                            page=p,
+                            search_query=self.search_query,
+                            order_by=self.order_by,
+                        ): p
                         for p in pages
                     }
-                    
-                    completed_count = 0
+
                     for future in as_completed(future_to_page):
                         page = future_to_page[future]
                         try:
-                            chars = future.result()
+                            chars, has_next = future.result()
                             if chars:
-                                results_map[page] = chars
-                            completed_count += 1
-                            # Optional: Emit partial progress
-                            # self.signals.progress.emit(f"Fetched page {completed_count}/{self.pages_to_fetch}")
+                                results_map[page] = (chars, has_next)
                         except Exception as e:
                             logger.error(f"Error fetching page {page}: {e}")
-                
-                # Assemble in order
+
                 for p in sorted(results_map.keys()):
-                    all_characters.extend(results_map[p])
-                    
-                self.signals.result.emit(all_characters)
+                    all_characters.extend(results_map[p][0])
+                last_page = self.start_page + self.pages_to_fetch - 1
+                has_next = results_map[last_page][1] if last_page in results_map else False
+
+                self.signals.result.emit((all_characters, has_next))
                 self.signals.finished.emit()
                 
         except Exception as e:
             logger.error(f"ScraperWorker error: {e}")
             self.signals.error.emit(str(e))
 
-class SyncAllWorker(BaseWorker):
-    """
-    Worker to sync ALL characters (deep scan).
-    """
-    def __init__(self, scraper: Scraper, stop_check: Optional[Callable[[], bool]] = None):
+class RandomCharactersWorker(BaseWorker):
+    """Fetches random characters from the API for the roulette (GET /api/heads/random)."""
+    def __init__(self, scraper: Scraper, count: int = 20):
         super().__init__()
         self.scraper = scraper
-        self.stop_check = stop_check
-        
+        self.count = max(2, min(50, count))
+
     @Slot()
     def run(self):
         try:
-            def callback(msg):
-                self.signals.progress.emit(msg)
-                
-            characters = self.scraper.get_all_characters(callback=callback, stop_check=self.stop_check)
+            characters = self.scraper.get_random_characters(self.count)
             self.signals.result.emit(characters)
             self.signals.finished.emit()
         except Exception as e:
-            logger.error(f"SyncAllWorker error: {e}")
+            logger.error(f"RandomCharactersWorker error: {e}")
             self.signals.error.emit(str(e))
 
 class InstallWorker(BaseWorker):
@@ -217,8 +224,8 @@ class InstalledCharactersWorker(BaseWorker):
                              search_name = name.replace("_", " ").strip()
                              
                              # Search
-                             found_chars = self.scraper.get_character_list(page=1, search_query=search_name)
-                             
+                             found_chars, _ = self.scraper.get_character_list(page=1, search_query=search_name)
+
                              if found_chars:
                                  # Use the first match (assumed most relevant)
                                  match = found_chars[0]
@@ -298,10 +305,10 @@ class PrefetchWorker(QRunnable):
             try:
                 if not self.is_running: break
                 
-                chars = self.scraper.get_character_list(self.current_page, search_query=self.search_query)
+                chars, _ = self.scraper.get_character_list(self.current_page, search_query=self.search_query)
                 if not chars:
                     break
-                
+
                 if not self.is_running: break
 
                 self.signals.page_ready.emit(self.current_page, chars)
