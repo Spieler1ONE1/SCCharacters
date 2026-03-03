@@ -384,18 +384,10 @@ class MainWindow(FramelessWindow):
 
         # Get version dynamically
         try:
-            # First try path from config manager
-            version_file = os.path.join(self.config_manager.base_path, "version.json")
-            
-            # Fallback: if not found, try current directory
-            if not os.path.exists(version_file):
-                version_file = "version.json"
-                
-            with open(version_file, "r") as f:
-                ver_data = json.load(f)
-                current_ver = ver_data.get("latest_version", "2.1.0")
-        except Exception as e:
-             current_ver = "2.1.0"
+            from src.version import APP_VERSION
+            current_ver = APP_VERSION
+        except ImportError:
+            current_ver = "2.3.0"
 
         self.about_tab = AboutTab(current_version=current_ver)
         self.tabs.addTab(self.about_tab, self.tr("tab_credits"))
